@@ -1,5 +1,6 @@
 "use client";
 
+import { LogOutIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,13 +15,15 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { logoutAction } from "@/app/login/actions";
+import type { SuperAdmin } from "@/lib/api/types";
 import { NAV_ITEMS } from "@/lib/navigation";
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppSidebar() {
+export function AppSidebar({ superAdmin }: { superAdmin: SuperAdmin }) {
   const pathname = usePathname();
 
   return (
@@ -63,7 +66,22 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <p className="px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">Signed-in user (Phase 1)</p>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="px-2 py-1 text-sm group-data-[collapsible=icon]:hidden">
+              <p className="truncate font-medium">{superAdmin.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{superAdmin.email}</p>
+            </div>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <form action={logoutAction}>
+              <SidebarMenuButton type="submit" tooltip="Sign out">
+                <LogOutIcon />
+                <span>Sign out</span>
+              </SidebarMenuButton>
+            </form>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

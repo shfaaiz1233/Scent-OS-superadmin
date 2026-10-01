@@ -13,9 +13,9 @@ export interface paths {
         };
         /**
          * Get store config
-         * @description The store's identity and theme. The storefront fetches this before rendering anything (cached for 20 minutes) and polls it every 20 minutes to pick up theme changes. A store without a theme gets the default preset.
+         * @description The store's identity, status and theme. The storefront fetches this before rendering anything (cached for 20 minutes) and polls it every 20 minutes to pick up changes. Stores in `SETUP` or `SUSPENDED` are served too, so the storefront can show "Opening soon" / "Temporarily unavailable" in their own theme. A store without a theme gets the default preset.
          *
-         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no active store uses that domain.
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
         get: operations["storefrontGetConfig"];
         put?: never;
@@ -37,7 +37,7 @@ export interface paths {
          * List perfumes
          * @description Perfumes in the store's catalogue, ordered by name, with their notes and inventory.
          *
-         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no active store uses that domain.
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
         get: operations["storefrontListPerfumes"];
         put?: never;
@@ -59,9 +59,323 @@ export interface paths {
          * Get a perfume
          * @description One perfume with its category, note pyramid and inventory.
          *
-         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no active store uses that domain.
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
         get: operations["storefrontGetPerfume"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in
+         * @description Sign a staff user in to this store's admin. The token is only valid for this store. Rate limited to 10 attempts per 15 minutes per client and store.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/auth/set-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set password from a link
+         * @description Redeem a one-time set-password link (sent to a new owner or staff user, or as a password reset): sets the password, signs out the user's other sessions, and signs them in. Links expire after 7 days and work once.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminSetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current user
+         * @description The signed-in staff user and their store (name, status).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminGetMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in
+         * @description Sign a superadmin in to the console. Accounts are created with `pnpm superadmin:create` (no sign-up). Rate limited to 10 attempts per 15 minutes per client.
+         */
+        post: operations["superAdminLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current superadmin
+         * @description The signed-in superadmin. The console calls this to check its session.
+         */
+        get: operations["superAdminGetMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List tenants
+         * @description Every store, newest first, with optional status filter and search (name, slug, domain, owner email).
+         */
+        get: operations["superAdminListTenants"];
+        put?: never;
+        /**
+         * Create a tenant
+         * @description Register a store and start provisioning it in the background: create and migrate `<slug>_schema`, seed defaults, create the owner's staff account. Responds at once with status `PROVISIONING`; poll `GET /api/superadmin/tenants/{id}` until it is `SETUP` (or `provisioningError` is set). Then send the owner a link from `POST …/owner-invite`. The theme is a copy of the chosen preset.
+         */
+        post: operations["superAdminCreateTenant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a tenant
+         * @description Everything about a store: status, provisioning error, owner contacts and login state, domains, theme.
+         */
+        get: operations["superAdminGetTenant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a tenant
+         * @description Change the store name or the owner's contact details (who we bill and contact). The slug is permanent. The owner's sign-in email is not changed.
+         */
+        patch: operations["superAdminUpdateTenant"];
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate a tenant
+         * @description Put the store live (from `SETUP` or `SUSPENDED`). Its storefronts are refreshed immediately.
+         */
+        post: operations["superAdminActivateTenant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend a tenant
+         * @description Take the store offline (from `SETUP` or `ACTIVE`): its storefront shows "Temporarily unavailable" immediately. Data is kept; activate again at any time.
+         */
+        post: operations["superAdminSuspendTenant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/provisioning/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry provisioning
+         * @description Run provisioning again for a store stuck in `PROVISIONING` (e.g. after `provisioningError`). Safe to repeat.
+         */
+        post: operations["superAdminRetryTenantProvisioning"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/theme": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace the theme
+         * @description Save the store's full theme (start from a preset in `GET /api/superadmin/theme-presets` and edit tokens). Its storefronts are refreshed immediately; open tabs pick it up within 20 minutes.
+         */
+        put: operations["superAdminUpdateTenantTheme"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a domain
+         * @description Serve the store on another hostname (e.g. `www.acme.com`). Point the domain at the storefront deployment separately. The first domain is the primary one, used in links.
+         */
+        post: operations["superAdminAddTenantDomain"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/domains/{domainId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a domain
+         * @description Stop serving the store on this hostname. A store keeps at least one domain.
+         */
+        delete: operations["superAdminRemoveTenantDomain"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/owner-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an owner set-password link
+         * @description A one-time link (valid 7 days) for the owner to set their /admin password on the store's primary domain. Also works as a password reset. Replaces any earlier unused link. Send it to the owner yourself (email sending arrives in a later phase).
+         */
+        post: operations["superAdminCreateOwnerInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/theme-presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List theme presets
+         * @description The 5 storefront presets with their full token sets, for the theme editor.
+         */
+        get: operations["superAdminListThemePresets"];
         put?: never;
         post?: never;
         delete?: never;
@@ -74,16 +388,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description Everything the storefront needs before it renders: store identity and theme. */
-        StoreConfig: {
-            store: {
-                /** @example Acme Perfumes */
-                name: string;
-                /** @example acme */
-                slug: string;
-            };
-            theme: components["schemas"]["Theme"];
-        };
         /** @description Storefront design tokens. Set per tenant by the superadmin. */
         Theme: {
             /**
@@ -205,6 +509,21 @@ export interface components {
             /** @example #111111 */
             footerForeground: string;
         };
+        /** @description Everything the storefront needs before it renders: store identity, status and theme. */
+        StoreConfig: {
+            store: {
+                /** @example Acme Perfumes */
+                name: string;
+                /** @example acme */
+                slug: string;
+                /**
+                 * @description SETUP: show "Opening soon". SUSPENDED: show "Temporarily unavailable". Only ACTIVE stores sell.
+                 * @enum {string}
+                 */
+                status: "SETUP" | "ACTIVE" | "SUSPENDED";
+            };
+            theme: components["schemas"]["ThemeOutput"];
+        };
         ErrorResponse: {
             error: {
                 /** @example Validation failed */
@@ -274,6 +593,269 @@ export interface components {
                 inStock: boolean;
             }[];
         };
+        StaffSession: {
+            /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
+            token: string;
+            /**
+             * Format: date-time
+             * @example 2026-10-02T02:00:00.000Z
+             */
+            expiresAt: string;
+            staff: components["schemas"]["StaffUser"];
+        };
+        StaffUser: {
+            /** Format: uuid */
+            id: string;
+            /** @example Ayesha Khan */
+            name: string;
+            /** @example owner@acme.com */
+            email: string;
+            /**
+             * @description OWNER: everything incl. bank details, billing, staff. STAFF: products, orders, content.
+             * @enum {string}
+             */
+            role: "OWNER" | "STAFF";
+        };
+        StaffMe: {
+            staff: components["schemas"]["StaffUser"];
+            store: {
+                /** @example Acme Perfumes */
+                name: string;
+                /** @example acme */
+                slug: string;
+                /** @enum {string} */
+                status: "SETUP" | "ACTIVE" | "SUSPENDED";
+            };
+        };
+        SuperAdminSession: {
+            /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
+            token: string;
+            /**
+             * Format: date-time
+             * @example 2026-10-02T02:00:00.000Z
+             */
+            expiresAt: string;
+            superAdmin: components["schemas"]["SuperAdmin"];
+        };
+        SuperAdmin: {
+            /** Format: uuid */
+            id: string;
+            /** @example you@scentos.pk */
+            email: string;
+            /** @example Faaiz */
+            name: string;
+        };
+        TenantList: {
+            items: components["schemas"]["TenantSummary"][];
+            /** @example 1 */
+            total: number;
+            /** @example 1 */
+            page: number;
+            /** @example 20 */
+            pageSize: number;
+        };
+        TenantSummary: {
+            /** Format: uuid */
+            id: string;
+            /** @example Acme Perfumes */
+            name: string;
+            /** @example acme */
+            slug: string;
+            /**
+             * @description PROVISIONING: schema being created. SETUP: admin only, storefront "Opening soon". ACTIVE: live. SUSPENDED: storefront unavailable.
+             * @enum {string}
+             */
+            status: "PROVISIONING" | "SETUP" | "ACTIVE" | "SUSPENDED";
+            /** @example acme.com */
+            primaryDomain: string | null;
+            ownerName: string | null;
+            ownerEmail: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        TenantDetail: {
+            /** Format: uuid */
+            id: string;
+            /** @example Acme Perfumes */
+            name: string;
+            /** @example acme */
+            slug: string;
+            /** @example acme_schema */
+            schemaName: string;
+            /**
+             * @description PROVISIONING: schema being created. SETUP: admin only, storefront "Opening soon". ACTIVE: live. SUSPENDED: storefront unavailable.
+             * @enum {string}
+             */
+            status: "PROVISIONING" | "SETUP" | "ACTIVE" | "SUSPENDED";
+            /** @description Why the status last changed, e.g. a suspension reason */
+            statusReason: string | null;
+            statusChangedAt: string | null;
+            /** @description Set when provisioning failed; retry with POST …/provisioning/retry */
+            provisioningError: string | null;
+            owner: {
+                name: string | null;
+                email: string | null;
+                phone: string | null;
+            };
+            /** @description The owner's /admin login: INVITED until they set a password. Null while provisioning. */
+            ownerAccount: ("NONE" | "INVITED" | "ACTIVE") | null;
+            domains: {
+                /** Format: uuid */
+                id: string;
+                /** @example acme.com */
+                domain: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            /**
+             * @description The storefront on the primary domain
+             * @example https://acme.com
+             */
+            storefrontUrl: string | null;
+            theme: components["schemas"]["ThemeOutput"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        OwnerInvite: {
+            /**
+             * @description Send this to the owner; it lets them set a password once
+             * @example https://acme.com/admin/set-password?token=…
+             */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        ThemePreset: {
+            /** @enum {string} */
+            key: "palette" | "noir" | "rose" | "amber" | "aqua";
+            /** @example Palette Classic */
+            name: string;
+            description: string;
+            theme: components["schemas"]["ThemeOutput"];
+        };
+        /** @description Storefront design tokens. Set per tenant by the superadmin. */
+        ThemeOutput: {
+            /**
+             * @description The preset this theme started from
+             * @enum {string}
+             */
+            preset: "palette" | "noir" | "rose" | "amber" | "aqua";
+            colors: components["schemas"]["ThemeColorsOutput"];
+            /**
+             * @description Base corner radius in rem; buttons, inputs and cards derive from it
+             * @example 0.25
+             */
+            radius: number;
+            fonts: {
+                /** @enum {string} */
+                heading: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
+                /** @enum {string} */
+                body: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
+            };
+            /**
+             * @description Transition speed, hover lift, image zoom and slider autoplay
+             * @enum {string}
+             */
+            motion: "none" | "subtle" | "lively";
+            productCard: {
+                /** @enum {string} */
+                imageAspect: "square" | "portrait";
+                /**
+                 * @description `swap` shows the second product image on hover
+                 * @enum {string}
+                 */
+                hover: "none" | "zoom" | "swap";
+                showBrand: boolean;
+            };
+            buttons: {
+                uppercase: boolean;
+                /** @enum {string} */
+                style: "solid" | "outline";
+            };
+        };
+        ThemeColorsOutput: {
+            /**
+             * @description Page background
+             * @example #111111
+             */
+            background: string;
+            /**
+             * @description Main text
+             * @example #111111
+             */
+            foreground: string;
+            /**
+             * @description Product cards, panels, dropdowns
+             * @example #111111
+             */
+            card: string;
+            /** @example #111111 */
+            cardForeground: string;
+            /**
+             * @description Primary buttons and key actions
+             * @example #111111
+             */
+            primary: string;
+            /** @example #111111 */
+            primaryForeground: string;
+            /**
+             * @description Secondary buttons, chips
+             * @example #111111
+             */
+            secondary: string;
+            /** @example #111111 */
+            secondaryForeground: string;
+            /**
+             * @description Subtle backgrounds (sections, inputs)
+             * @example #111111
+             */
+            muted: string;
+            /**
+             * @description Secondary text
+             * @example #111111
+             */
+            mutedForeground: string;
+            /**
+             * @description Highlights: links on hover, badges, active states
+             * @example #111111
+             */
+            accent: string;
+            /** @example #111111 */
+            accentForeground: string;
+            /**
+             * @description Borders and dividers
+             * @example #111111
+             */
+            border: string;
+            /**
+             * @description Focus outline
+             * @example #111111
+             */
+            ring: string;
+            /**
+             * @description Sale prices and badges
+             * @example #111111
+             */
+            sale: string;
+            /** @example #111111 */
+            saleForeground: string;
+            /**
+             * @description Announcement bar background
+             * @example #111111
+             */
+            announcement: string;
+            /** @example #111111 */
+            announcementForeground: string;
+            /**
+             * @description Footer background
+             * @example #111111
+             */
+            footer: string;
+            /** @example #111111 */
+            footerForeground: string;
+        };
     };
     responses: {
         /** @description Unexpected server error. */
@@ -294,6 +876,24 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
+        /** @description Too many attempts from this client for this store; try again in 15 minutes. */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Missing, invalid or expired session token (sign in again). */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
     };
     parameters: never;
     requestBodies: never;
@@ -306,7 +906,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Domain of the store being browsed. Sent by the storefront server. */
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
                 "x-store-domain"?: string;
             };
             path?: never;
@@ -325,7 +925,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Store not found: no active store uses the calling domain. */
+            /** @description Store not found: no store serves the calling domain, or it is still being provisioned. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -346,7 +946,7 @@ export interface operations {
                 limit?: number;
             };
             header?: {
-                /** @description Domain of the store being browsed. Sent by the storefront server. */
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
                 "x-store-domain"?: string;
             };
             path?: never;
@@ -366,7 +966,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            /** @description Store not found: no active store uses the calling domain. */
+            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -382,7 +982,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Domain of the store being browsed. Sent by the storefront server. */
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
                 "x-store-domain"?: string;
             };
             path: {
@@ -414,6 +1014,770 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminLogin: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: email
+                     * @example owner@acme.com
+                     */
+                    email: string;
+                    /** @example correct-horse-battery */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Signed in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffSession"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description Email or password is incorrect (also for accounts without a password yet, or disabled). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminSetPassword: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description The token from the set-password link */
+                    token: string;
+                    /**
+                     * @description At least 10 characters
+                     * @example correct-horse-battery
+                     */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Password set and signed in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffSession"];
+                    };
+                };
+            };
+            /** @description Validation failed (`details`), or the link is invalid, used or expired. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminGetMe: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The current user and store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffMe"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: email
+                     * @example owner@acme.com
+                     */
+                    email: string;
+                    /** @example correct-horse-battery */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Signed in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SuperAdminSession"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description Email or password is incorrect. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The current superadmin */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SuperAdmin"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminListTenants: {
+        parameters: {
+            query?: {
+                status?: "PROVISIONING" | "SETUP" | "ACTIVE" | "SUSPENDED";
+                /** @description Search name, slug, domain or owner email */
+                q?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of tenants */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantList"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminCreateTenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Acme Perfumes */
+                    name: string;
+                    /**
+                     * @description Permanent; becomes the schema name `<slug>_schema`
+                     * @example acme
+                     */
+                    slug: string;
+                    /** @example Ayesha Khan */
+                    ownerName: string;
+                    /**
+                     * Format: email
+                     * @example owner@acme.com
+                     */
+                    ownerEmail: string;
+                    /** @example +92 300 1234567 */
+                    ownerPhone: string;
+                    /** @description The first one is the primary domain (used in links) */
+                    domains: string[];
+                    /**
+                     * @default palette
+                     * @enum {string}
+                     */
+                    themePreset?: "palette" | "noir" | "rose" | "amber" | "aqua";
+                };
+            };
+        };
+        responses: {
+            /** @description Created; provisioning is running */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The slug or a domain is already used by another store. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetTenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The tenant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminUpdateTenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    ownerName?: string;
+                    /**
+                     * Format: email
+                     * @example owner@acme.com
+                     */
+                    ownerEmail?: string;
+                    /** @example +92 300 1234567 */
+                    ownerPhone?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated tenant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminActivateTenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The tenant, now ACTIVE */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store is in a status that can’t be activated (e.g. still provisioning, or already active). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminSuspendTenant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Shown in the console and audit log
+                     * @example Subscription unpaid
+                     */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The tenant, now SUSPENDED */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store is in a status that can’t be suspended (e.g. still provisioning, or already suspended). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminRetryTenantProvisioning: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Provisioning restarted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store is already provisioned, or provisioning is running. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminUpdateTenantTheme: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    theme: components["schemas"]["Theme"];
+                };
+            };
+        };
+        responses: {
+            /** @description The tenant with its new theme */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminAddTenantDomain: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example acme.com */
+                    domain: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The tenant with the new domain */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The domain is already used by another store. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminRemoveTenantDomain: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+                /** @description Domain ID */
+                domainId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The tenant without the domain */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant or domain not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description It is the store’s only domain. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminCreateOwnerInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The link */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OwnerInvite"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store is still provisioning, or has no owner name and email. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminListThemePresets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The presets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ThemePreset"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
             500: components["responses"]["InternalError"];
         };
     };

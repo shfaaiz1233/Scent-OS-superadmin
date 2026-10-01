@@ -2,12 +2,15 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { getCurrentSuperAdmin } from "@/lib/session";
 
-/** The signed-in console: sidebar, top bar, page. (Auth guard added in Phase 1.) */
-export default function ConsoleLayout({ children }: LayoutProps<"/">) {
+/** The signed-in console: sidebar, top bar, page. Every request checks the session with the API. */
+export default async function ConsoleLayout({ children }: LayoutProps<"/">) {
+  const superAdmin = await getCurrentSuperAdmin();
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar superAdmin={superAdmin} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />

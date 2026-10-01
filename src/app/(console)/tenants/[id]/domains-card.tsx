@@ -19,12 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { TenantDetail } from "@/lib/api/types";
-import { addDomainAction, removeDomainAction } from "../actions";
+import { addDomainAction, removeDomainAction, setPrimaryDomainAction } from "../actions";
 
-/** The hostnames the storefront is served from. The first is primary (used in links). */
+/** The hostnames the storefront is served from. The primary one is used in links; any can be made primary. */
 export function DomainsCard({ tenantId, domains }: { tenantId: string; domains: TenantDetail["domains"] }) {
   const [state, formAction, adding] = useActionState(addDomainAction.bind(null, tenantId), null);
   const [removing, startRemove] = useTransition();
+  const [promoting, startPromote] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const failed = state && !state.ok ? state : null;
 
@@ -39,18 +40,43 @@ export function DomainsCard({ tenantId, domains }: { tenantId: string; domains: 
     <Card>
       <CardHeader>
         <CardTitle>Domains</CardTitle>
-        <CardDescription>Point each domain at the storefront deployment separately.</CardDescription>
+        <CardDescription>
+          Point each domain at the storefront deployment. Links (storefront, set-password) use the primary domain.
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <ul className="divide-y rounded-md border">
-          {domains.map((domain, index) => (
+          {domains.map((domain) => (
             <li key={domain.id} className="flex items-center gap-2 px-3 py-2 text-sm">
-              <span className="font-mono">{domain.domain}</span>
-              {index === 0 && <Badge variant="secondary">Primary</Badge>}
+              <span className="min-w-0 truncate font-mono">{domain.domain}</span>
+              {domain.isPrimary && <Badge variant="secondary">Primary</Badge>}
+              {!domain.isPrimary && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                  disabled={promoting}
+                  onClick={() =>
+                    startPromote(async () => {
+                      const result = await setPrimaryDomainAction(tenantId, domain.id);
+                      if (result.ok) toast.success(`${domain.domain} is now the primary domain`);
+                      else toast.error(result.error);
+                    })
+                  }
+                >
+                  Make primary
+                </Button>
+              )}
               {domains.length > 1 && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="ml-auto" aria-label={`Remove ${domain.domain}`} disabled={removing}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={domain.isPrimary ? "ml-auto" : undefined}
+                      aria-label={`Remove ${domain.domain}`}
+                      disabled={removing}
+                    >
                       <Trash2Icon />
                     </Button>
                   </AlertDialogTrigger>
@@ -59,6 +85,7 @@ export function DomainsCard({ tenantId, domains }: { tenantId: string; domains: 
                       <AlertDialogTitle>Remove {domain.domain}?</AlertDialogTitle>
                       <AlertDialogDescription>
                         The store stops being served on this hostname within a minute.
+                        {domain.isPrimary && " The oldest remaining domain becomes the primary domain."}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

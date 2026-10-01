@@ -110,6 +110,16 @@ export async function addDomainAction(id: string, _prev: ActionResult | null, fo
   return { ok: true, data: undefined };
 }
 
+export async function setPrimaryDomainAction(id: string, domainId: string): Promise<ActionResult> {
+  try {
+    await api<TenantDetail>(`/api/superadmin/tenants/${id}/domains/${domainId}/primary`, { method: "POST" });
+  } catch (err) {
+    return toActionError(err);
+  }
+  refreshTenant(id);
+  return { ok: true, data: undefined };
+}
+
 export async function removeDomainAction(id: string, domainId: string): Promise<ActionResult> {
   try {
     await api<TenantDetail>(`/api/superadmin/tenants/${id}/domains/${domainId}`, { method: "DELETE" });

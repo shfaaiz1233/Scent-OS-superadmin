@@ -26,7 +26,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/storefront/perfumes": {
+    "/api/storefront/products": {
         parameters: {
             query?: never;
             header?: never;
@@ -34,12 +34,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List perfumes
-         * @description Perfumes in the store's catalogue, ordered by name, with their notes and inventory.
+         * List products
+         * @description A page of products in a collection (default `all`), optionally searched and filtered. Values within one filter match any (OR); different filters must all match (AND). In the Decants collection, prices, sizes and the price filter are about decants. Only ACTIVE products of live (ACTIVE) stores.
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
-        get: operations["storefrontListPerfumes"];
+        get: operations["storefrontListProducts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -48,7 +48,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/storefront/perfumes/{id}": {
+    "/api/storefront/products/filters": {
         parameters: {
             query?: never;
             header?: never;
@@ -56,12 +56,100 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get a perfume
-         * @description One perfume with its category, note pyramid and inventory.
+         * List filters
+         * @description The brands, genders, types, notes, sizes and price range of the products in a collection (and search), with counts: what the shopper can filter on. Counts ignore the shopper's other filters. Only ACTIVE products of live (ACTIVE) stores.
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
-        get: operations["storefrontGetPerfume"];
+        get: operations["storefrontListProductFilters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a product
+         * @description The product page: images, full sizes and decants (each with price and availability), and the note pyramid with each note's olfactory family. Only ACTIVE products of live (ACTIVE) stores.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        get: operations["storefrontGetProduct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/products/{id}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List related products
+         * @description Other products of the same brand or gender, featured and newest first. Only ACTIVE products of live (ACTIVE) stores.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        get: operations["storefrontListRelatedProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List collections
+         * @description The built-in collections (all, new-arrivals, men, women, unisex, decants, sale, gift-sets) in that order, then the store's hand-picked ones A–Z. List their products with `GET /api/storefront/products?collection=<slug>`.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        get: operations["storefrontListCollections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/collections/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a collection
+         * @description A collection's name, description, image and default sort.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        get: operations["storefrontGetCollection"];
         put?: never;
         post?: never;
         delete?: never;
@@ -131,6 +219,466 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List products
+         * @description A page of products, recently changed first, with search and filters. ARCHIVED ones only when asked for.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListProducts"];
+        put?: never;
+        /**
+         * Create a product
+         * @description Create a product with its sizes, decants, images and note pyramid.
+         *
+         *     **Brand and notes** can be given by name: an existing brand or note with that name (ignoring case and accents) is used, otherwise it is created. **Sizes** are full bottles; **decants** are small sizes poured from the bottle, offered only while `decantsEnabled` is true. A product can only be ACTIVE with at least one active size or decant. Archiving or restoring (status to or from ARCHIVED) also needs "Archive and delete products". Prices are minor units (paisa).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminCreateProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a product
+         * @description Everything the product form edits, plus the hand-picked collections it is in.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminGetProduct"];
+        /**
+         * Update a product
+         * @description Replace the product with the body. Sizes and decants with an `id` are updated, ones without are added, and existing ones left out are deleted. Images and notes are replaced.
+         *
+         *     **Brand and notes** can be given by name: an existing brand or note with that name (ignoring case and accents) is used, otherwise it is created. **Sizes** are full bottles; **decants** are small sizes poured from the bottle, offered only while `decantsEnabled` is true. A product can only be ACTIVE with at least one active size or decant. Archiving or restoring (status to or from ARCHIVED) also needs "Archive and delete products". Prices are minor units (paisa).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        put: operations["adminUpdateProduct"];
+        post?: never;
+        /**
+         * Delete a draft
+         * @description Delete a DRAFT product for good. Published products are archived instead (status ARCHIVED).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        delete: operations["adminDeleteProduct"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/brands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List brands
+         * @description Every brand, A–Z, with how many products use it. The product form uses this for its brand search.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListBrands"];
+        put?: never;
+        /**
+         * Create a brand
+         * @description Add a brand. (Brands typed into the product form are created when the product is saved.)
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminCreateBrand"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/brands/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update a brand
+         * @description Rename it or change its logo. Renaming also changes its slug, used in storefront filter links.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        put: operations["adminUpdateBrand"];
+        post?: never;
+        /**
+         * Delete a brand
+         * @description Delete a brand that no product uses.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        delete: operations["adminDeleteBrand"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List notes
+         * @description Every note, A–Z, with its olfactory family and how many products use it.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListNotes"];
+        put?: never;
+        /**
+         * Create a note
+         * @description Add a note. (Notes typed into the product form are created when the product is saved.)
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminCreateNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/notes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update a note
+         * @description Rename it or change its olfactory family. Renaming also changes its slug, used in filter links.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        put: operations["adminUpdateNote"];
+        post?: never;
+        /**
+         * Delete a note
+         * @description Delete a note that no product pyramid uses.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        delete: operations["adminDeleteNote"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/note-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List olfactory families
+         * @description The olfactory families (Citrus, Woody…) a note can belong to. Shared by every store; managed by the platform.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListNoteCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List collections
+         * @description The hand-picked collections, A–Z. Built-in collections are rules and aren’t listed here.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListCollections"];
+        put?: never;
+        /**
+         * Create a collection
+         * @description Create a hand-picked collection.
+         *
+         *     The slug (default: from the name) makes the page /collections/<slug>; built-in slugs (all, new-arrivals, men, women, unisex, decants, sale, gift-sets) are reserved. `productIds` sets the products and their order.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminCreateCollection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/collections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a collection
+         * @description The collection and its products, in order (any status; only ACTIVE ones show on the storefront).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminGetCollection"];
+        /**
+         * Update a collection
+         * @description Replace the collection, including its products and their order.
+         *
+         *     The slug (default: from the name) makes the page /collections/<slug>; built-in slugs (all, new-arrivals, men, women, unisex, decants, sale, gift-sets) are reserved. `productIds` sets the products and their order.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        put: operations["adminUpdateCollection"];
+        post?: never;
+        /**
+         * Delete a collection
+         * @description Delete the collection. Its products are not affected.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        delete: operations["adminDeleteCollection"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/uploads/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get upload settings
+         * @description Whether image uploads are on for this server, and the size and type limits. When they are off (e.g. locally without storage keys), forms take image URLs instead (picsum.photos placeholders).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminGetUploadConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a signed upload
+         * @description A one-time URL to upload one image (JPG, PNG or WebP, up to 5 MB) straight to the store's bucket. Upload with `PUT uploadUrl` from the browser, then save `publicUrl` on the product, brand or collection. Product images need "Add products" or "Edit products"; brand logos "Manage brands"; collection images "Manage collections".
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminCreateUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List staff
+         * @description Everyone with access to the admin: the owner first, then staff A–Z. Owner only.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListStaff"];
+        put?: never;
+        /**
+         * Invite a staff user
+         * @description Add a staff user with a role, without a password, and get their one-time set-password link (valid 7 days) on the store’s primary domain. Send it to them yourself (email sending arrives in a later phase). Owner only.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminInviteStaff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/staff/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a staff user
+         * @description Change their name, phone, role or status. A new role applies to their next request; disabling signs them out everywhere at once. Owner only; the owner’s own account can’t be changed here.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        patch: operations["adminUpdateStaff"];
+        trace?: never;
+    };
+    "/api/admin/staff/{id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a set-password link
+         * @description A new one-time set-password link for a staff user (also a password reset), valid 7 days. Replaces any unused link. Owner only.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminCreateStaffLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List permissions
+         * @description Every permission a role can grant, grouped and in display order. Staff, roles, bank details and billing are owner-only and never part of a role. Any signed-in staff user.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List roles
+         * @description The store’s roles, A–Z, with how many staff have each. Owner only.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListRoles"];
+        put?: never;
+        /**
+         * Create a role
+         * @description A named set of permissions to give staff. Owner only.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminCreateRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update a role
+         * @description Rename it or change its permissions; applies at once to everyone with the role. Owner only.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        put: operations["adminUpdateRole"];
+        post?: never;
+        /**
+         * Delete a role
+         * @description Delete a role nobody has. Owner only.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        delete: operations["adminDeleteRole"];
         options?: never;
         head?: never;
         patch?: never;
@@ -336,9 +884,29 @@ export interface paths {
         post?: never;
         /**
          * Remove a domain
-         * @description Stop serving the store on this hostname. A store keeps at least one domain.
+         * @description Stop serving the store on this hostname. A store keeps at least one domain. Removing the primary domain makes the oldest remaining domain primary.
          */
         delete: operations["superAdminRemoveTenantDomain"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/domains/{domainId}/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a domain primary
+         * @description Use this domain in the store's links (the storefront link and set-password links). The previous primary domain keeps serving the store. Does nothing if it is already primary.
+         */
+        post: operations["superAdminSetPrimaryTenantDomain"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -388,6 +956,111 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description featured: featured first, then newest. manual: the order chosen for a hand-picked collection. Prices sort on the lowest price shown (decant prices in the Decants collection).
+         * @enum {string}
+         */
+        CatalogSort: "featured" | "newest" | "price-asc" | "price-desc" | "name" | "manual";
+        /**
+         * @description DRAFT: admin only. ACTIVE: on the storefront. ARCHIVED: hidden, kept for past orders.
+         * @enum {string}
+         */
+        ProductStatus: "DRAFT" | "ACTIVE" | "ARCHIVED";
+        /**
+         * @description What kind of product it is. GIFT_SET products make up the Gift sets collection.
+         * @enum {string}
+         */
+        ProductType: "PERFUME" | "ATTAR" | "BODY_MIST" | "DEODORANT" | "GIFT_SET" | "MINIATURE" | "TESTER" | "HOME_FRAGRANCE" | "COSMETIC" | "OTHER";
+        /**
+         * @description Who the fragrance is for; drives the Men / Women / Unisex collections.
+         * @enum {string}
+         */
+        Gender: "MEN" | "WOMEN" | "UNISEX";
+        /**
+         * @description EXTRAIT: extrait de parfum. PARFUM. EDP: eau de parfum. EDT: eau de toilette. EDC: eau de cologne.
+         * @enum {string}
+         */
+        Concentration: "EXTRAIT" | "PARFUM" | "EDP" | "EDT" | "EDC";
+        /** @description A full-size variant (a bottle, or the item itself) */
+        SizeInput: {
+            /**
+             * Format: uuid
+             * @description An existing size of this product to update; omit to add one.
+             */
+            id?: string;
+            /**
+             * @description Selling price, minor units (paisa)
+             * @example 1290000
+             */
+            price: number;
+            /**
+             * @description Original price, shown struck through (a sale). Minor units; above the price.
+             * @example 1490000
+             */
+            compareAtPrice?: number | null;
+            /** @example 12 */
+            stock: number;
+            /**
+             * @description Inactive sizes are hidden from shoppers
+             * @default true
+             */
+            isActive: boolean;
+            /**
+             * @description Optional; unique in the store
+             * @example LAT-KHAMRAH-100
+             */
+            sku?: string | null;
+            /**
+             * @description Shown on the size button
+             * @example 100ml
+             */
+            label: string;
+            /**
+             * @description Millilitres, for the size filter
+             * @example 100
+             */
+            sizeMl?: number | null;
+        };
+        /** @description A decant size: an amount poured from the full bottle into a vial */
+        DecantInput: {
+            /**
+             * Format: uuid
+             * @description An existing size of this product to update; omit to add one.
+             */
+            id?: string;
+            /**
+             * @description Selling price, minor units (paisa)
+             * @example 1290000
+             */
+            price: number;
+            /**
+             * @description Original price, shown struck through (a sale). Minor units; above the price.
+             * @example 1490000
+             */
+            compareAtPrice?: number | null;
+            /** @example 12 */
+            stock: number;
+            /**
+             * @description Inactive sizes are hidden from shoppers
+             * @default true
+             */
+            isActive: boolean;
+            /**
+             * @description Optional; unique in the store
+             * @example LAT-KHAMRAH-100
+             */
+            sku?: string | null;
+            /**
+             * @description Millilitres in the vial; also its label ("5ml")
+             * @example 5
+             */
+            sizeMl: number;
+        };
+        /**
+         * @description An action a role can allow (see `GET /api/admin/permissions`).
+         * @enum {string}
+         */
+        Permission: "catalog.view" | "products.create" | "products.edit" | "products.delete" | "brands.manage" | "notes.manage" | "collections.manage";
         /** @description Storefront design tokens. Set per tenant by the superadmin. */
         Theme: {
             /**
@@ -540,58 +1213,155 @@ export interface components {
                 }[];
             };
         };
-        /** @description A perfume as shown on the storefront */
-        StorefrontPerfume: {
-            /**
-             * Format: uuid
-             * @example 13c8666c-69d8-466e-b23e-cff7ac9d4e8f
-             */
+        StorefrontProductList: {
+            items: components["schemas"]["StorefrontProductCard"][];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        /** @description A product in a list */
+        StorefrontProductCard: {
+            /** Format: uuid */
             id: string;
-            /** @example Midnight Oud */
+            /** @example Khamrah */
             name: string;
-            /** @example Acme Perfumes */
-            brand: string;
-            /** @example Smoky oud and rose over warm amber. */
-            description: string | null;
-            /** @description Storefront category, e.g. Men, Women or Unisex */
-            category: {
-                /** @example Unisex */
-                name: string;
-                /** @example unisex */
+            type: components["schemas"]["ProductType"];
+            gender: components["schemas"]["Gender"] | null;
+            brand: components["schemas"]["StorefrontBrand"] | null;
+            /** @description The first two images (the second shows on hover in some themes) */
+            images: components["schemas"]["StorefrontImage"][];
+            /** @description The lowest price shown (of decants, in the Decants collection) */
+            price: number | null;
+            /** @description Struck-through original price of that size, when on sale */
+            compareAtPrice: number | null;
+            /** @description Sizes have different prices: show "From" */
+            priceVaries: boolean;
+            /** @description Lowest decant price, when the product offers decants */
+            decantPrice: number | null;
+            /**
+             * @description Size labels in display order
+             * @example [
+             *       "50ml",
+             *       "100ml"
+             *     ]
+             */
+            sizes: string[];
+            inStock: boolean;
+            onSale: boolean;
+        };
+        StorefrontBrand: {
+            /** @example Lattafa */
+            name: string;
+            /** @example lattafa */
+            slug: string;
+        };
+        StorefrontImage: {
+            url: string;
+            alt: string | null;
+        };
+        /** @description What can be filtered on in a collection (or a search), with product counts. Empty facets are left out. */
+        StorefrontFilters: {
+            brands: {
                 slug: string;
-            };
-            notes: {
-                /** @example Oud */
                 name: string;
-                /**
-                 * @description Where the note sits in the fragrance pyramid
-                 * @enum {string}
-                 */
-                position: "TOP" | "HEART" | "BASE";
-                /** @description Olfactory family, shared by every store */
-                noteCategory: {
-                    /** @example Woody */
-                    name: string;
-                    /** @example woody */
-                    slug: string;
-                } | null;
+                count: number;
             }[];
-            /** @description Sellable sizes, smallest first */
-            inventory: {
-                /** @example ACME-MIDNIGHT-OUD-50 */
-                sku: string;
-                /**
-                 * @description Bottle size in millilitres
-                 * @example 50
-                 */
-                sizeMl: number;
-                /**
-                 * @description Price in minor units (cents)
-                 * @example 12900
-                 */
-                price: number;
-                inStock: boolean;
+            genders: {
+                value: components["schemas"]["Gender"];
+                count: number;
             }[];
+            types: {
+                value: components["schemas"]["ProductType"];
+                count: number;
+            }[];
+            notes: {
+                slug: string;
+                name: string;
+                count: number;
+            }[];
+            /** @description Sizes in ml (decant sizes in the Decants collection) */
+            sizes: {
+                value: number;
+                count: number;
+            }[];
+            /** @description Range of the prices shown; null when nothing has a price */
+            price: {
+                /**
+                 * @description Minor units (paisa)
+                 * @example 1290000
+                 */
+                min: number;
+                /**
+                 * @description Minor units (paisa)
+                 * @example 1290000
+                 */
+                max: number;
+            } | null;
+        };
+        /** @description A product page */
+        StorefrontProduct: {
+            /** Format: uuid */
+            id: string;
+            /** @example Khamrah */
+            name: string;
+            description: string | null;
+            type: components["schemas"]["ProductType"];
+            gender: components["schemas"]["Gender"] | null;
+            concentration: components["schemas"]["Concentration"] | null;
+            brand: components["schemas"]["StorefrontBrand"] | null;
+            images: components["schemas"]["StorefrontImage"][];
+            /** @description Full sizes, in display order */
+            sizes: components["schemas"]["StorefrontVariant"][];
+            /** @description Decant sizes; empty when the product has no decants */
+            decants: components["schemas"]["StorefrontVariant"][];
+            notes: {
+                top: components["schemas"]["StorefrontNote"][];
+                heart: components["schemas"]["StorefrontNote"][];
+                base: components["schemas"]["StorefrontNote"][];
+            };
+        };
+        StorefrontVariant: {
+            /** Format: uuid */
+            id: string;
+            /** @example 100ml */
+            label: string;
+            sizeMl: number | null;
+            /**
+             * @description Minor units (paisa)
+             * @example 1290000
+             */
+            price: number;
+            compareAtPrice: number | null;
+            inStock: boolean;
+        };
+        StorefrontNote: {
+            /** @example Oud */
+            name: string;
+            /** @example oud */
+            slug: string;
+            /** @description Olfactory family, shared by every store */
+            family: {
+                /** @example Woody */
+                name: string;
+                /** @example woody */
+                slug: string;
+            } | null;
+        };
+        StorefrontCollection: {
+            /** @example decants */
+            slug: string;
+            /** @example Decants */
+            name: string;
+            description: string | null;
+            imageUrl: string | null;
+            /**
+             * @description BUILT_IN: a rule (Men, Decants, Sale…). CUSTOM: hand-picked.
+             * @enum {string}
+             */
+            kind: "BUILT_IN" | "CUSTOM";
+            /** @description Lists decant sizes and prices (the Decants collection) */
+            decants: boolean;
+            defaultSort: components["schemas"]["CatalogSort"];
         };
         StaffSession: {
             /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
@@ -603,6 +1373,7 @@ export interface components {
             expiresAt: string;
             staff: components["schemas"]["StaffUser"];
         };
+        /** @description The signed-in staff user */
         StaffUser: {
             /** Format: uuid */
             id: string;
@@ -610,11 +1381,17 @@ export interface components {
             name: string;
             /** @example owner@acme.com */
             email: string;
-            /**
-             * @description OWNER: everything incl. bank details, billing, staff. STAFF: products, orders, content.
-             * @enum {string}
-             */
-            role: "OWNER" | "STAFF";
+            /** @description The store owner can do everything, including staff and roles. */
+            isOwner: boolean;
+            /** @description Staff: their role. Null for the owner, and for staff without a role (dashboard only). */
+            role: {
+                /** Format: uuid */
+                id: string;
+                /** @example Catalogue manager */
+                name: string;
+            } | null;
+            /** @description What they may do: every permission for the owner. */
+            permissions: components["schemas"]["Permission"][];
         };
         StaffMe: {
             staff: components["schemas"]["StaffUser"];
@@ -626,6 +1403,279 @@ export interface components {
                 /** @enum {string} */
                 status: "SETUP" | "ACTIVE" | "SUSPENDED";
             };
+        };
+        AdminProductList: {
+            items: components["schemas"]["AdminProductSummary"][];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        AdminProductSummary: {
+            /** Format: uuid */
+            id: string;
+            /** @example Khamrah */
+            name: string;
+            brand: {
+                /** Format: uuid */
+                id: string;
+                /** @example Lattafa */
+                name: string;
+            } | null;
+            type: components["schemas"]["ProductType"];
+            gender: components["schemas"]["Gender"] | null;
+            status: components["schemas"]["ProductStatus"];
+            isFeatured: boolean;
+            /** @description The main image */
+            imageUrl: string | null;
+            /** @description Lowest offered price, minor units (paisa) */
+            priceFrom: number | null;
+            sizeCount: number;
+            decantsEnabled: boolean;
+            decantCount: number;
+            /** @description Units across the offered sizes */
+            totalStock: number;
+            /**
+             * @description OUT: nothing offered is in stock. LOW: an offered size has 1–3 left.
+             * @enum {string}
+             */
+            stockStatus: "IN_STOCK" | "LOW" | "OUT";
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description A product with everything the admin edits */
+        AdminProduct: {
+            /** Format: uuid */
+            id: string;
+            /** @example Khamrah */
+            name: string;
+            description: string | null;
+            type: components["schemas"]["ProductType"];
+            gender: components["schemas"]["Gender"] | null;
+            concentration: components["schemas"]["Concentration"] | null;
+            status: components["schemas"]["ProductStatus"];
+            isFeatured: boolean;
+            brand: {
+                /** Format: uuid */
+                id: string;
+                /** @example Lattafa */
+                name: string;
+            } | null;
+            decantsEnabled: boolean;
+            sizes: components["schemas"]["AdminVariant"][];
+            decants: components["schemas"]["AdminVariant"][];
+            images: {
+                /** Format: uuid */
+                id: string;
+                url: string;
+                alt: string | null;
+            }[];
+            notes: {
+                top: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @example Saffron */
+                    name: string;
+                }[];
+                heart: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @example Dates */
+                    name: string;
+                }[];
+                base: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @example Amber */
+                    name: string;
+                }[];
+            };
+            /** @description Hand-picked collections it is in */
+            collections: {
+                /** Format: uuid */
+                id: string;
+                /** @example Eid gifts */
+                name: string;
+            }[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AdminVariant: {
+            /** Format: uuid */
+            id: string;
+            /** @example 100ml */
+            label: string;
+            /** @example 100 */
+            sizeMl: number | null;
+            sku: string | null;
+            /**
+             * @description Minor units (paisa)
+             * @example 1290000
+             */
+            price: number;
+            /** @description Minor units (paisa) */
+            compareAtPrice: number | null;
+            stock: number;
+            isActive: boolean;
+        };
+        AdminBrand: {
+            /** Format: uuid */
+            id: string;
+            /** @example Lattafa */
+            name: string;
+            /**
+             * @description Used in storefront filter URLs
+             * @example lattafa
+             */
+            slug: string;
+            logoUrl: string | null;
+            /** @description Products of this brand, any status */
+            productCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AdminNote: {
+            /** Format: uuid */
+            id: string;
+            /** @example Oud */
+            name: string;
+            /**
+             * @description Used in storefront filter URLs
+             * @example oud
+             */
+            slug: string;
+            noteCategory: components["schemas"]["NoteCategory"] | null;
+            /** @description Products whose pyramid uses it */
+            productCount: number;
+        };
+        /** @description An olfactory family, shared by every store and managed by the platform */
+        NoteCategory: {
+            /** Format: uuid */
+            id: string;
+            /** @example Woody */
+            name: string;
+            /** @example woody */
+            slug: string;
+        };
+        AdminCollectionSummary: {
+            /** Format: uuid */
+            id: string;
+            /** @example Eid gifts */
+            name: string;
+            /** @example eid-gifts */
+            slug: string;
+            description: string | null;
+            imageUrl: string | null;
+            productCount: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description A hand-picked collection and its products, in order */
+        AdminCollection: {
+            /** Format: uuid */
+            id: string;
+            /** @example Eid gifts */
+            name: string;
+            /** @example eid-gifts */
+            slug: string;
+            description: string | null;
+            imageUrl: string | null;
+            productCount: number;
+            /** Format: date-time */
+            updatedAt: string;
+            products: {
+                /** Format: uuid */
+                id: string;
+                /** @example Khamrah */
+                name: string;
+                /** @example Lattafa */
+                brandName: string | null;
+                imageUrl: string | null;
+                status: components["schemas"]["ProductStatus"];
+            }[];
+        };
+        UploadConfig: {
+            /** @description False: uploads are off on this server; use image URLs instead */
+            enabled: boolean;
+            /** @example 5242880 */
+            maxBytes: number;
+            contentTypes: ("image/jpeg" | "image/png" | "image/webp")[];
+        };
+        SignedUpload: {
+            /** @description PUT the file here from the browser (multipart form data with the file, or the raw bytes with its Content-Type). Valid for 2 hours, once. */
+            uploadUrl: string;
+            /** @description The image URL to save on the product, brand or collection */
+            publicUrl: string;
+            /** @example acme/products/4c3f0f2e-8a8b-4b8e-9f43-3f5d1f1c2b7a.webp */
+            path: string;
+        };
+        /** @description Someone with access to this store's admin */
+        StaffMember: {
+            /** Format: uuid */
+            id: string;
+            /** @example Bilal Ahmed */
+            name: string;
+            /** @example bilal@acme.com */
+            email: string;
+            phone: string | null;
+            isOwner: boolean;
+            role: {
+                /** Format: uuid */
+                id: string;
+                /** @example Catalogue manager */
+                name: string;
+            } | null;
+            /** @enum {string} */
+            status: "ACTIVE" | "DISABLED";
+            /**
+             * @description INVITED: hasn’t set a password yet. ACTIVE: has signed in at least once.
+             * @enum {string}
+             */
+            account: "INVITED" | "ACTIVE";
+            lastLoginAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description The new staff user and their set-password link */
+        StaffInvite: {
+            staff: components["schemas"]["StaffMember"];
+            link: components["schemas"]["SetPasswordLink"];
+        };
+        SetPasswordLink: {
+            /**
+             * @description Send this to the person; it lets them set a password once
+             * @example https://acme.com/admin/set-password?token=…
+             */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        PermissionInfo: {
+            key: components["schemas"]["Permission"];
+            /** @example Catalogue */
+            group: string;
+            /** @example Edit products */
+            label: string;
+            /** @example Change product details, prices, stock, decants, images and notes. */
+            description: string;
+        };
+        /** @description A named set of permissions for staff */
+        Role: {
+            /** Format: uuid */
+            id: string;
+            /** @example Catalogue manager */
+            name: string;
+            description: string | null;
+            permissions: components["schemas"]["Permission"][];
+            /** @description Staff users with this role */
+            staffCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         SuperAdminSession: {
             /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
@@ -704,6 +1754,8 @@ export interface components {
                 id: string;
                 /** @example acme.com */
                 domain: string;
+                /** @description The main domain, used in links. Exactly one per store. */
+                isPrimary: boolean;
                 /** Format: date-time */
                 createdAt: string;
             }[];
@@ -937,13 +1989,33 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    storefrontListPerfumes: {
+    storefrontListProducts: {
         parameters: {
             query?: {
-                /** @description Only perfumes in this category (its slug) */
-                category?: string;
-                /** @description Maximum number of perfumes to return */
-                limit?: number;
+                /** @description A collection slug (see `GET /api/storefront/collections`) */
+                collection?: string;
+                /** @description Search by name or brand */
+                q?: string;
+                /** @description Brand slugs, comma-separated */
+                brand?: string;
+                /** @description Comma-separated */
+                gender?: string;
+                /** @description Comma-separated */
+                type?: string;
+                /** @description Note slugs, comma-separated */
+                note?: string;
+                /** @description Sizes in ml, comma-separated (decant sizes in the Decants collection) */
+                size?: string;
+                /** @description Minor units (paisa) */
+                minPrice?: number;
+                /** @description Minor units (paisa) */
+                maxPrice?: number;
+                /** @description true: only products with something in stock */
+                inStock?: "true" | "false";
+                /** @description Default: the collection's default sort */
+                sort?: components["schemas"]["CatalogSort"];
+                page?: number;
+                pageSize?: number;
             };
             header?: {
                 /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
@@ -954,18 +2026,174 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The perfumes */
+            /** @description A page of products */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["StorefrontPerfume"][];
+                        data: components["schemas"]["StorefrontProductList"];
                     };
                 };
             };
             400: components["responses"]["ValidationError"];
+            /** @description Collection not found, or no live (ACTIVE) store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontListProductFilters: {
+        parameters: {
+            query?: {
+                /** @description A collection slug (see `GET /api/storefront/collections`) */
+                collection?: string;
+                /** @description Search by name or brand */
+                q?: string;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The filters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontFilters"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description Collection not found, or no live (ACTIVE) store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontGetProduct: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Product ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The product */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontProduct"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description Product not found (or not ACTIVE) in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontListRelatedProducts: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Product ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Related products */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontProductCard"][];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description Product not found (or not ACTIVE) in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontListCollections: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The collections */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontCollection"][];
+                    };
+                };
+            };
             /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
             404: {
                 headers: {
@@ -978,7 +2206,7 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
-    storefrontGetPerfume: {
+    storefrontGetCollection: {
         parameters: {
             query?: never;
             header?: {
@@ -986,26 +2214,25 @@ export interface operations {
                 "x-store-domain"?: string;
             };
             path: {
-                /** @description Perfume ID */
-                id: string;
+                slug: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The perfume */
+            /** @description The collection */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["StorefrontPerfume"];
+                        data: components["schemas"]["StorefrontCollection"];
                     };
                 };
             };
             400: components["responses"]["ValidationError"];
-            /** @description Perfume not found in this store, or store not found. */
+            /** @description Collection not found in this store, or store not found. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -1168,6 +2395,1881 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    adminListProducts: {
+        parameters: {
+            query?: {
+                /** @description Search by name, brand or SKU */
+                q?: string;
+                /** @description Only this status. Default: everything except ARCHIVED. */
+                status?: components["schemas"]["ProductStatus"];
+                brandId?: string;
+                type?: components["schemas"]["ProductType"];
+                gender?: components["schemas"]["Gender"];
+                /** @description in: something in stock. low: a size with 1–3 left. out: nothing in stock. */
+                stock?: "in" | "low" | "out";
+                page?: number;
+                pageSize?: number;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of products */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminProductList"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminCreateProduct: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Khamrah */
+                    name: string;
+                    /** @example Warm spices, dates and praline over amber and woods. */
+                    description?: string | null;
+                    /** @default PERFUME */
+                    type?: components["schemas"]["ProductType"];
+                    /** @default null */
+                    gender?: components["schemas"]["Gender"] | null;
+                    /** @default null */
+                    concentration?: components["schemas"]["Concentration"] | null;
+                    /** @default DRAFT */
+                    status?: components["schemas"]["ProductStatus"];
+                    /**
+                     * @description Listed first in the "Featured" sort and on the homepage
+                     * @default false
+                     */
+                    isFeatured?: boolean;
+                    /**
+                     * @description An existing brand by id, or a name: the brand with that name (ignoring case and accents) is used, otherwise it is created.
+                     * @default null
+                     */
+                    brand?: ({
+                        /** Format: uuid */
+                        id: string;
+                    } | {
+                        /** @example Lattafa */
+                        name: string;
+                    }) | null;
+                    /**
+                     * @description Offer the decant sizes below on the storefront
+                     * @default false
+                     */
+                    decantsEnabled?: boolean;
+                    /** @description Full sizes, in display order */
+                    sizes?: components["schemas"]["SizeInput"][];
+                    /** @description Decant sizes, in display order. Kept but hidden while decants are disabled. */
+                    decants?: components["schemas"]["DecantInput"][];
+                    /** @description Up to 8; the first is the main image */
+                    images?: {
+                        /**
+                         * Format: uri
+                         * @description HTTPS URL of an image uploaded to the store's bucket (see `POST /api/admin/uploads`), or a picsum.photos placeholder.
+                         * @example https://picsum.photos/seed/khamrah/800/800
+                         */
+                        url: string;
+                        /** @example Khamrah 100ml bottle */
+                        alt?: string | null;
+                    }[];
+                    /**
+                     * @description The note pyramid. A note can only appear once.
+                     * @default {
+                     *       "top": [],
+                     *       "heart": [],
+                     *       "base": []
+                     *     }
+                     */
+                    notes?: {
+                        /** @default [] */
+                        top?: ({
+                            /** Format: uuid */
+                            id: string;
+                        } | {
+                            /** @example Saffron */
+                            name: string;
+                        })[];
+                        /** @default [] */
+                        heart?: ({
+                            /** Format: uuid */
+                            id: string;
+                        } | {
+                            /** @example Saffron */
+                            name: string;
+                        })[];
+                        /** @default [] */
+                        base?: ({
+                            /** Format: uuid */
+                            id: string;
+                        } | {
+                            /** @example Saffron */
+                            name: string;
+                        })[];
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description The new product */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminProduct"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Add products" (`products.create`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A SKU is already used by another product. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminGetProduct: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Product ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The product */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminProduct"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Product not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminUpdateProduct: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Product ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Khamrah */
+                    name: string;
+                    /** @example Warm spices, dates and praline over amber and woods. */
+                    description?: string | null;
+                    /** @default PERFUME */
+                    type?: components["schemas"]["ProductType"];
+                    /** @default null */
+                    gender?: components["schemas"]["Gender"] | null;
+                    /** @default null */
+                    concentration?: components["schemas"]["Concentration"] | null;
+                    /** @default DRAFT */
+                    status?: components["schemas"]["ProductStatus"];
+                    /**
+                     * @description Listed first in the "Featured" sort and on the homepage
+                     * @default false
+                     */
+                    isFeatured?: boolean;
+                    /**
+                     * @description An existing brand by id, or a name: the brand with that name (ignoring case and accents) is used, otherwise it is created.
+                     * @default null
+                     */
+                    brand?: ({
+                        /** Format: uuid */
+                        id: string;
+                    } | {
+                        /** @example Lattafa */
+                        name: string;
+                    }) | null;
+                    /**
+                     * @description Offer the decant sizes below on the storefront
+                     * @default false
+                     */
+                    decantsEnabled?: boolean;
+                    /** @description Full sizes, in display order */
+                    sizes?: components["schemas"]["SizeInput"][];
+                    /** @description Decant sizes, in display order. Kept but hidden while decants are disabled. */
+                    decants?: components["schemas"]["DecantInput"][];
+                    /** @description Up to 8; the first is the main image */
+                    images?: {
+                        /**
+                         * Format: uri
+                         * @description HTTPS URL of an image uploaded to the store's bucket (see `POST /api/admin/uploads`), or a picsum.photos placeholder.
+                         * @example https://picsum.photos/seed/khamrah/800/800
+                         */
+                        url: string;
+                        /** @example Khamrah 100ml bottle */
+                        alt?: string | null;
+                    }[];
+                    /**
+                     * @description The note pyramid. A note can only appear once.
+                     * @default {
+                     *       "top": [],
+                     *       "heart": [],
+                     *       "base": []
+                     *     }
+                     */
+                    notes?: {
+                        /** @default [] */
+                        top?: ({
+                            /** Format: uuid */
+                            id: string;
+                        } | {
+                            /** @example Saffron */
+                            name: string;
+                        })[];
+                        /** @default [] */
+                        heart?: ({
+                            /** Format: uuid */
+                            id: string;
+                        } | {
+                            /** @example Saffron */
+                            name: string;
+                        })[];
+                        /** @default [] */
+                        base?: ({
+                            /** Format: uuid */
+                            id: string;
+                        } | {
+                            /** @example Saffron */
+                            name: string;
+                        })[];
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description The updated product */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminProduct"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Edit products" (`products.edit`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Product not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A SKU is already used by another product. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminDeleteProduct: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Product ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Archive and delete products" (`products.delete`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Product not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The product isn’t a draft: archive it instead. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListBrands: {
+        parameters: {
+            query?: {
+                /** @description Search by name */
+                q?: string;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The brands */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminBrand"][];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminCreateBrand: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Lattafa */
+                    name: string;
+                    logoUrl?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The new brand */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminBrand"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another brand already has this name (ignoring case and accents). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminUpdateBrand: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Brand ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Lattafa */
+                    name: string;
+                    logoUrl?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated brand */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminBrand"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Brand not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another brand already has this name (ignoring case and accents). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminDeleteBrand: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Brand ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Brand not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Products still use this brand. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListNotes: {
+        parameters: {
+            query?: {
+                /** @description Search by name */
+                q?: string;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The notes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminNote"][];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminCreateNote: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Oud */
+                    name: string;
+                    /** @description Its olfactory family (see `GET /api/admin/note-categories`) */
+                    noteCategoryId?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The new note */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminNote"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another note already has this name (ignoring case and accents). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminUpdateNote: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Note ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Oud */
+                    name: string;
+                    /** @description Its olfactory family (see `GET /api/admin/note-categories`) */
+                    noteCategoryId?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated note */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminNote"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Note not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another note already has this name (ignoring case and accents). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminDeleteNote: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Note ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Note not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Product pyramids still use this note. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListNoteCategories: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The families, A–Z */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NoteCategory"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListCollections: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The collections */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCollectionSummary"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminCreateCollection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Eid gifts */
+                    name: string;
+                    /**
+                     * @description Default: from the name
+                     * @example eid-gifts
+                     */
+                    slug?: string;
+                    description?: string | null;
+                    imageUrl?: string | null;
+                    /**
+                     * @description The products, in display order. Only ACTIVE ones show on the storefront.
+                     * @default []
+                     */
+                    productIds?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description The new collection */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCollection"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another collection already uses this address (slug). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminGetCollection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Collection ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The collection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCollection"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Collection not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminUpdateCollection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Collection ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Eid gifts */
+                    name: string;
+                    /**
+                     * @description Default: from the name
+                     * @example eid-gifts
+                     */
+                    slug?: string;
+                    description?: string | null;
+                    imageUrl?: string | null;
+                    /**
+                     * @description The products, in display order. Only ACTIVE ones show on the storefront.
+                     * @default []
+                     */
+                    productIds?: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description The updated collection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCollection"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Collection not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another collection already uses this address (slug). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminDeleteCollection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Collection ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Collection not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminGetUploadConfig: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The upload settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["UploadConfig"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminCreateUpload: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description What the image is for (its folder)
+                     * @enum {string}
+                     */
+                    kind: "product" | "brand" | "collection";
+                    /**
+                     * @example image/webp
+                     * @enum {string}
+                     */
+                    contentType: "image/jpeg" | "image/png" | "image/webp";
+                    /**
+                     * @description File size in bytes (up to 5 MB)
+                     * @example 482133
+                     */
+                    size: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Where to upload, and the resulting image URL */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SignedUpload"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't allow uploading this kind of image. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description The image storage service failed or refused the request. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Uploads aren’t set up on this server (no storage keys): use image URLs. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminListStaff: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The staff */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffMember"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminInviteStaff: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Bilal Ahmed */
+                    name: string;
+                    /**
+                     * Format: email
+                     * @example owner@acme.com
+                     */
+                    email: string;
+                    phone?: string | null;
+                    /** @description Their role (see `GET /api/admin/roles`). Null: they can only sign in and see the dashboard. */
+                    roleId: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The new staff user and their link */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffInvite"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Someone with this email already has access to this store. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminUpdateStaff: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Staff user ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    phone?: string | null;
+                    /** @description Their role (see `GET /api/admin/roles`). Null: they can only sign in and see the dashboard. */
+                    roleId?: string | null;
+                    /**
+                     * @description DISABLED: can no longer sign in, and is signed out everywhere at once
+                     * @enum {string}
+                     */
+                    status?: "ACTIVE" | "DISABLED";
+                };
+            };
+        };
+        responses: {
+            /** @description The updated staff user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffMember"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this, or the target is the owner (the owner's account is managed by the platform). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Staff user not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminCreateStaffLink: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Staff user ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The link */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SetPasswordLink"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this, or the target is the owner (the owner's account is managed by the platform). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Staff user not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The account is disabled: enable it first. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListPermissions: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The permissions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PermissionInfo"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListRoles: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The roles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Role"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminCreateRole: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Catalogue manager */
+                    name: string;
+                    /** @example Adds and edits products, brands and collections. */
+                    description?: string | null;
+                    /** @description What staff with this role may do. Stored in catalogue order; `catalog.view` is added automatically when any catalogue permission is given. */
+                    permissions: components["schemas"]["Permission"][];
+                };
+            };
+        };
+        responses: {
+            /** @description The new role */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Role"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another role already has this name. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminUpdateRole: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Role ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Catalogue manager */
+                    name: string;
+                    /** @example Adds and edits products, brands and collections. */
+                    description?: string | null;
+                    /** @description What staff with this role may do. Stored in catalogue order; `catalog.view` is added automatically when any catalogue permission is given. */
+                    permissions: components["schemas"]["Permission"][];
+                };
+            };
+        };
+        responses: {
+            /** @description The updated role */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Role"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another role already has this name. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminDeleteRole: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Role ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Staff still have this role: give them another one first. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
     superAdminLogin: {
         parameters: {
             query?: never;
@@ -1295,7 +4397,7 @@ export interface operations {
                     ownerEmail: string;
                     /** @example +92 300 1234567 */
                     ownerPhone: string;
-                    /** @description The first one is the primary domain (used in links) */
+                    /** @description The first one becomes the primary domain (used in links); change it later. */
                     domains: string[];
                     /**
                      * @default palette
@@ -1701,6 +4803,45 @@ export interface operations {
             };
             /** @description It is the store’s only domain. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminSetPrimaryTenantDomain: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+                /** @description Domain ID */
+                domainId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The tenant with its new primary domain */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantDetail"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant or domain not found. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

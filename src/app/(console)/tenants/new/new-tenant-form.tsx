@@ -70,7 +70,7 @@ export function NewTenantForm({ presets }: { presets: ThemePreset[] }) {
           <FormField
             id="domains"
             label="Domains"
-            hint="One per line, without https://. The first is the primary domain."
+            hint="One per line, without https://. The first becomes the primary domain; you can change it later."
             error={errors.domains}
           >
             <Textarea id="domains" name="domains" required rows={3} className="font-mono" placeholder={"acme.com\nwww.acme.com"} />

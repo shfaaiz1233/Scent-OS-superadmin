@@ -38,9 +38,9 @@ Without `--password`, a strong password is generated and printed once. Sessions 
 
 ## Managing stores
 
-- **Tenants → New tenant:** name, slug (permanent; becomes the database schema), owner contact, domains (one per line or comma-separated; the first is the primary domain used in links) and a theme preset. Provisioning runs in the background and the page updates by itself; if it fails, the error is shown with **Retry provisioning**.
+- **Tenants → New tenant:** name, slug (permanent; becomes the database schema), owner contact, domains (one per line or comma-separated; the first becomes the primary domain used in links) and a theme preset. Provisioning runs in the background and the page updates by itself; if it fails, the error is shown with **Retry provisioning**.
 - **New stores start in SETUP:** the owner can use `/admin`, and the storefront says "Opening soon". Use **Activate** to make it live, and **Suspend** (with a reason) to take it offline; the data is kept.
-- **Overview tab:** edit the store and owner details, add or remove domains, and create the owner's **set-password link** (Owner access). Send that link to the owner yourself (e.g. WhatsApp) until email sending arrives in Phase 5. It's valid for 7 days, works once, and also serves as a password reset.
+- **Overview tab:** edit the store and owner details, add or remove domains (**Make primary** chooses which one links use), and create the owner's **set-password link** (Owner access). Send that link to the owner yourself (e.g. WhatsApp) until email sending arrives in Phase 5. It's valid for 7 days, works once, and also serves as a password reset.
 - **Theme tab:** pick a preset, adjust colours, corner radius, fonts, motion, product cards and buttons, and watch the live preview. Colour pairs that are hard to read (below the WCAG AA contrast of 4.5:1) are flagged. Saving updates the storefront on its next page load.
 
 Every change is recorded in the audit log.

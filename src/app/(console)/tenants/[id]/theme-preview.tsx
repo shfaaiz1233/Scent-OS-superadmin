@@ -1,15 +1,7 @@
 import { HeartIcon, SearchIcon, ShoppingBagIcon } from "lucide-react";
 import type { CSSProperties } from "react";
-import type { Theme, ThemeFont } from "@/lib/api/types";
-
-// Font variables from src/lib/theme-fonts.ts (same names as the storefront's).
-export const THEME_FONT_FAMILY: Record<ThemeFont, string> = {
-  jost: "var(--font-jost)",
-  "cormorant-garamond": "var(--font-cormorant-garamond)",
-  "playfair-display": "var(--font-playfair-display)",
-  "nunito-sans": "var(--font-nunito-sans)",
-  poppins: "var(--font-poppins)",
-};
+import type { Theme } from "@/lib/api/types";
+import { THEME_FONT_FAMILY } from "@/lib/theme-font-family";
 
 const SAMPLE_PRODUCTS = [
   { brand: "Lattafa", name: "Midnight Oud", price: "Rs 12,900" },

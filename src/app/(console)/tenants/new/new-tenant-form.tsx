@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { FormField } from "@/components/form-field";
+import { ThemeOption, ThemeThumbnail } from "@/components/theme-option";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { ThemePreset } from "@/lib/api/types";
-import { cn } from "@/lib/utils";
 import { createTenantAction } from "../actions";
 
 // Slug rules match the API: 2–30 lowercase letters, digits or underscores, starting with a letter.
@@ -105,29 +105,14 @@ export function NewTenantForm({ presets }: { presets: ThemePreset[] }) {
           <input type="hidden" name="themePreset" value={preset} />
           <div role="radiogroup" aria-label="Theme preset" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {presets.map((p) => (
-              <button
+              <ThemeOption
                 key={p.key}
-                type="button"
-                role="radio"
-                aria-checked={preset === p.key}
-                onClick={() => setPreset(p.key)}
-                className={cn(
-                  "flex flex-col gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50",
-                  preset === p.key && "border-primary ring-2 ring-primary/20",
-                )}
-              >
-                <span className="flex h-10 overflow-hidden rounded-md border">
-                  {[p.theme.colors.background, p.theme.colors.primary, p.theme.colors.accent, p.theme.colors.footer].map(
-                    (color, i) => (
-                      <span key={i} className="flex-1" style={{ backgroundColor: color }} />
-                    ),
-                  )}
-                </span>
-                <span>
-                  <span className="block text-sm font-medium">{p.name}</span>
-                  <span className="block text-xs text-muted-foreground">{p.description}</span>
-                </span>
-              </button>
+                selected={preset === p.key}
+                onSelect={() => setPreset(p.key)}
+                title={p.name}
+                description={p.description}
+                preview={<ThemeThumbnail theme={p.theme} />}
+              />
             ))}
           </div>
         </CardContent>

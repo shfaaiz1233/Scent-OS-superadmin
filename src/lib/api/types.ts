@@ -10,6 +10,7 @@ export type TenantList = Schemas["TenantList"];
 export type TenantDetail = Schemas["TenantDetail"];
 export type TenantStatus = TenantDetail["status"];
 export type OwnerInvite = Schemas["OwnerInvite"];
+export type AdminAccessLink = Schemas["AdminAccessLink"];
 export type ThemePreset = Schemas["ThemePreset"];
 export type Theme = Schemas["Theme"];
 export type ThemeFont = Theme["fonts"]["heading"];

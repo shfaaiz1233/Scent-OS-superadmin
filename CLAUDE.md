@@ -51,10 +51,10 @@ src/
 │       │   ├── page.tsx        List: status filter, search, pagination (searchParams)
 │       │   ├── actions.ts      Every tenant server action
 │       │   ├── new/            Create form (slug from name, preset cards)
-│       │   └── [id]/           Detail: header actions (storefront link, status-actions),
+│       │   └── [id]/           Detail: header actions (storefront link, open-store-admin-button, status-actions),
 │       │                       provisioning-panel while PROVISIONING, else tabs:
 │       │                       Overview (tenant-details-form, domains-card, owner-access-card) and
-│       │                       Theme (theme-editor + theme-preview). Later: subscription, flags, content
+│       │                       Theme (theme-editor + theme-preview). Later: subscription, flags
 │       ├── plans/  payments/  ledger/  settings/   Placeholders until their phases
 ├── components/
 │   ├── ui/                     shadcn/ui, generated; don't hand-edit
@@ -82,6 +82,7 @@ src/
 - **Status actions** (`status-actions.tsx`) follow the API's transitions (SETUP/SUSPENDED → ACTIVE, SETUP/ACTIVE → SUSPENDED). Each confirms in an `AlertDialog` that states the effect on the storefront, and suspending requires a reason (3–500 characters).
 - **Domains:** one domain is primary (`isPrimary`; used for the storefront link and set-password links). It's the first one at creation; **Make primary** (`setPrimaryDomainAction`) changes it. Removing the primary domain makes the oldest remaining one primary, and the API refuses to remove the last domain.
 - **Owner access:** creates a one-time set-password link (valid 7 days; replaces any unused one) and shows it with a copy button. It's shown once; it isn't stored in readable form. It needs an owner email on the tenant.
+- **Open store admin** (`open-store-admin-button.tsx`): store content is edited in the store's own `/admin`, never in a second editor here. The button calls `createAdminAccessLinkAction` (a server action, so it's a POST with Next's origin check; the API audits it), then sends a tab it opened **before** the await to the returned link, because browsers block windows opened after an await. The link works once, for 2 minutes, and signs the superadmin in as "Platform" with owner rights for 4 hours. Don't turn it into a GET route or a plain link: a GET that creates a session could be triggered by another site.
 - **Theme editor** (`theme-editor.tsx`): draft state on the client, saved with `saveThemeAction` (the API then revalidates the storefronts). `theme-preview.tsx` renders a mini storefront with inline styles from the draft, so the console's own tokens never leak into it. Keep it in step with the storefront when the theme schema changes.
   - **Picker:** a card per preset plus **Custom** (`ThemeOption`). The selected card is computed: the preset whose tokens equal the draft (`sameTheme`, ignoring key order and hex case), else Custom. Every token change goes through `edit()`, which also remembers the latest custom design, so trying presets never loses it and clicking Custom brings it back. A custom theme keeps `preset` as the key it started from ("based on").
   - **Layout:** at `xl` the preview column (`aside`) is `sticky` beside the scrolling form, with Save/Discard at its top; the preview scrolls on its own if it's taller than the window. The grid needs `items-start`, or the sticky column stretches and never sticks.

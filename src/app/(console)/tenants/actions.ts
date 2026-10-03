@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type ActionResult, formValues, toActionError } from "@/lib/action-result";
 import { api } from "@/lib/api/server";
-import type { OwnerInvite, TenantDetail, Theme } from "@/lib/api/types";
+import type { AdminAccessLink, OwnerInvite, TenantDetail, Theme } from "@/lib/api/types";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 
@@ -128,6 +128,15 @@ export async function removeDomainAction(id: string, domainId: string): Promise<
   }
   refreshTenant(id);
   return { ok: true, data: undefined };
+}
+
+/** A one-time link that signs the superadmin in to the store's /admin as "Platform" (audited by the API). */
+export async function createAdminAccessLinkAction(id: string): Promise<ActionResult<AdminAccessLink>> {
+  try {
+    return { ok: true, data: await api<AdminAccessLink>(`/api/superadmin/tenants/${id}/admin-access`, { method: "POST" }) };
+  } catch (err) {
+    return toActionError(err);
+  }
 }
 
 export async function createOwnerInviteAction(id: string): Promise<ActionResult<OwnerInvite>> {

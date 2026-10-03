@@ -11,6 +11,7 @@ import { ApiError, api } from "@/lib/api/server";
 import type { TenantDetail, ThemePreset } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
 import { DomainsCard } from "./domains-card";
+import { OpenStoreAdminButton } from "./open-store-admin-button";
 import { OwnerAccessCard } from "./owner-access-card";
 import { ProvisioningPanel } from "./provisioning-panel";
 import { StatusActions } from "./status-actions";
@@ -50,6 +51,7 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
                 </a>
               </Button>
             )}
+            {!provisioning && <OpenStoreAdminButton tenantId={tenant.id} />}
             <StatusActions tenantId={tenant.id} tenantName={tenant.name} status={tenant.status} />
           </>
         }

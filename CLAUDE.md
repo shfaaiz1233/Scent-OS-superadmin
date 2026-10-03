@@ -8,7 +8,7 @@ The platform owner's console: onboard tenants (which provisions their database s
 - API: `../Scent-OS` (OpenAPI docs at `http://localhost:6001/docs`). Superadmin endpoints live under `/api/superadmin/*`.
 - Stack: Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind CSS 4, shadcn/ui (Radix, `radix-nova` style, neutral base), next-themes (light/dark), lucide-react, pnpm.
 - **Design: minimal.** Neutral shadcn look, dense and functional. See the skill `console-ui`.
-- Deployed on Vercel at `app.thescentsystem.store` (`vercel.json`: region `syd1`); setup and variables in `../Scent-OS/docs/deployment.md`. CI: `.github/workflows/ci.yml` (typecheck, lint).
+- Deployed on Vercel at `app.thescentsystem.store` (`vercel.json`: framework Next.js, region `syd1`); setup and variables in `../Scent-OS/docs/deployment.md`. CI: `.github/workflows/ci.yml` (typecheck, lint).
 
 ## Commands
 

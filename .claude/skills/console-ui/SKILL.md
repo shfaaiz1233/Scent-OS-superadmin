@@ -1,6 +1,6 @@
 ---
 name: console-ui
-description: Minimal design system for the Scent-OS superadmin console: tokens, page anatomy, status badges, tables, forms, confirmations. Use when building or changing any superadmin page or component.
+description: Minimal design system for The Scent System superadmin console: tokens, page anatomy, status badges, tables, forms, confirmations. Use when building or changing any superadmin page or component.
 ---
 
 # Superadmin console UI

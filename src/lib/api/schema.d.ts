@@ -246,6 +246,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/storefront/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get checkout options
+         * @description The payment methods the store takes (bank transfer only while it has an active bank account), the delivery fee, the free-delivery threshold and the store’s checkout note.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        get: operations["storefrontGetCheckoutConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Price a cart
+         * @description The cart (kept in the shopper’s browser) with current prices, stock and the delivery fee. Sizes that are no longer sold come back in `unavailable`; lines without enough stock have a `problem`. Read-only: nothing is reserved.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        post: operations["storefrontQuoteCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Place an order
+         * @description Guest checkout. Prices come from the catalogue (never from the request), the stock is taken at once, and the order gets the next number (e.g. ACM-1001) with status PENDING. The response has a `token` that opens the order page; the shopper gets it by email too, with the bank details for a bank transfer, and the store gets a new-order email. Limited to 10 attempts per 10 minutes per client and store.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        post: operations["storefrontPlaceOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/orders/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an order
+         * @description The shopper’s order page: status, items, totals, delivery address and how to pay (bank accounts and WhatsApp link while a bank transfer is unpaid). Needs the order’s token.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        get: operations["storefrontGetOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/orders/{number}/receipt-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start a receipt upload
+         * @description For an unpaid bank-transfer order: a signed URL to upload the payment screenshot (JPG, PNG or WebP, up to 5 MB) straight to the store’s private receipts bucket. Confirm it afterwards with `POST …/receipt`. Only when `payment.receiptUploads` is true on the order.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        post: operations["storefrontCreateReceiptUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/storefront/orders/{number}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach an uploaded receipt
+         * @description After uploading: attaches the receipt to the order and sets the payment to AWAITING_VERIFICATION for the store to check. A new receipt replaces the previous one.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        post: operations["storefrontConfirmReceipt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/auth/login": {
         parameters: {
             query?: never;
@@ -1100,6 +1232,172 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/settings/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get checkout settings
+         * @description Payment methods (cash on delivery, bank transfer), the delivery fee and free-delivery threshold, the checkout note and the order number prefix, with the next order number and how many bank accounts are active.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminGetCheckoutSettings"];
+        /**
+         * Save checkout settings
+         * @description At least one payment method must be on. Bank transfer is only offered to shoppers while the store also has an active bank account (the owner manages those). A new prefix applies to the next orders; numbers keep counting up.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        put: operations["adminUpdateCheckoutSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/bank-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List bank accounts
+         * @description Owner only. The accounts shown to shoppers who pay by bank transfer, in order.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListBankAccounts"];
+        /**
+         * Save bank accounts
+         * @description Owner only. Replaces the list (up to 5), in order. Unpaid bank-transfer orders show the active accounts as they are at the time.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        put: operations["adminReplaceBankAccounts"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List orders
+         * @description Orders, newest first, filtered by status, payment status and a search (number, customer name, phone or email). `counts` has the number of orders per status in the whole store, for tabs.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminListOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an order
+         * @description An order with its items, customer, address, payment receipt (a link valid for 10 minutes), history, and what its status and payment can change to next.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        get: operations["adminGetOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/orders/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change an order’s status
+         * @description PENDING → CONFIRMED → SHIPPED (with courier and tracking number) → DELIVERED; any open order can be CANCELLED with a reason. Cancelling puts the stock back. Delivering a cash-on-delivery order marks it paid, and every delivered order counts in the platform’s sales ledger. Each change is added to the order’s history.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminChangeOrderStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/orders/{id}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change an order’s payment
+         * @description Mark the payment received (PAID), reject an uploaded receipt (back to UNPAID, so the shopper can send another), or record a refund (REFUNDED; for a delivered order it also comes off the sales ledger). See `paymentActions` on the order.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminChangeOrderPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/orders/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a note to an order
+         * @description An internal note in the order’s history (shoppers never see it).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         */
+        post: operations["adminAddOrderNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/superadmin/auth/login": {
         parameters: {
             query?: never;
@@ -1496,7 +1794,7 @@ export interface components {
          * @description An action a role can allow (see `GET /api/admin/permissions`).
          * @enum {string}
          */
-        Permission: "catalog.view" | "products.create" | "products.edit" | "products.delete" | "products.import" | "brands.manage" | "notes.manage" | "collections.manage" | "content.manage" | "settings.manage" | "newsletter.manage";
+        Permission: "catalog.view" | "products.create" | "products.edit" | "products.delete" | "products.import" | "brands.manage" | "notes.manage" | "collections.manage" | "content.manage" | "orders.view" | "orders.manage" | "settings.manage" | "newsletter.manage";
         /** @description Storefront design tokens. Set per tenant by the superadmin. */
         Theme: {
             /**
@@ -1964,6 +2262,183 @@ export interface components {
         SubscribeResult: {
             /** @constant */
             subscribed: true;
+        };
+        /** @description How this store takes orders */
+        CheckoutConfig: {
+            /** @description What the store accepts, in the order to show them */
+            paymentMethods: ("COD" | "BANK_TRANSFER")[];
+            /**
+             * @description Delivery fee, minor units (paisa)
+             * @example 25000
+             */
+            shippingFee: number;
+            freeShippingThreshold: number | null;
+            /** @description From the store, to show at checkout */
+            checkoutNote: string | null;
+        };
+        /** @description A cart priced with current prices and stock */
+        CartQuote: {
+            lines: {
+                /** Format: uuid */
+                variantId: string;
+                /** Format: uuid */
+                productId: string;
+                /** @example Khamrah */
+                productName: string;
+                /** @example Lattafa */
+                brandName: string | null;
+                imageUrl: string | null;
+                /**
+                 * @description FULL_SIZE (a bottle or the item itself) or DECANT
+                 * @enum {string}
+                 */
+                kind: "FULL_SIZE" | "DECANT";
+                /** @example 100ml */
+                label: string;
+                /**
+                 * @description Current price, minor units (paisa)
+                 * @example 890000
+                 */
+                unitPrice: number;
+                compareAtPrice: number | null;
+                /** @description As asked for */
+                quantity: number;
+                /** @description How many can be ordered now (stock, at most 20) */
+                available: number;
+                /**
+                 * @description unitPrice × quantity
+                 * @example 890000
+                 */
+                lineTotal: number;
+                /** @description Why the line can’t be ordered as it is; checkout refuses carts with problems */
+                problem: ("OUT_OF_STOCK" | "NOT_ENOUGH_STOCK") | null;
+            }[];
+            /** @description Sizes in the cart that are no longer sold: remove them */
+            unavailable: string[];
+            /**
+             * @description Sum of the lines, minor units (paisa)
+             * @example 890000
+             */
+            subtotal: number;
+            /**
+             * @description Delivery fee for this cart (0 when free), minor units
+             * @example 25000
+             */
+            shippingFee: number;
+            /**
+             * @description subtotal + shippingFee, minor units
+             * @example 915000
+             */
+            total: number;
+            freeShippingThreshold: number | null;
+        };
+        PlacedOrder: {
+            order: components["schemas"]["StorefrontOrder"];
+            /** @description Opens the order later: /orders/<number>?token=<token>. Sent in the order email too; shown once. */
+            token: string;
+        };
+        /** @description An order, as its shopper sees it */
+        StorefrontOrder: {
+            /** @example ACM-1001 */
+            number: string;
+            /**
+             * @description PENDING (placed) → CONFIRMED → SHIPPED → DELIVERED (complete), or CANCELLED
+             * @enum {string}
+             */
+            status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+            /**
+             * @description COD: cash on delivery. BANK_TRANSFER: direct transfer to one of the store’s bank accounts
+             * @enum {string}
+             */
+            paymentMethod: "COD" | "BANK_TRANSFER";
+            /**
+             * @description UNPAID; AWAITING_VERIFICATION: a receipt was uploaded and the store is checking it; PAID; REFUNDED
+             * @enum {string}
+             */
+            paymentStatus: "UNPAID" | "AWAITING_VERIFICATION" | "PAID" | "REFUNDED";
+            /** Format: date-time */
+            placedAt: string;
+            customer: {
+                name: string;
+                phone: string;
+                email: string;
+            };
+            address: {
+                line: string;
+                city: string;
+                province: string | null;
+                postalCode: string | null;
+            };
+            notes: string | null;
+            items: {
+                /** @description Null if the product was deleted since */
+                productId: string | null;
+                /** @example Khamrah */
+                productName: string;
+                brandName: string | null;
+                /** @enum {string} */
+                variantKind: "FULL_SIZE" | "DECANT";
+                /** @example 100ml */
+                variantLabel: string;
+                imageUrl: string | null;
+                /**
+                 * @description As charged, minor units (paisa)
+                 * @example 890000
+                 */
+                unitPrice: number;
+                quantity: number;
+                /**
+                 * @description Minor units (paisa)
+                 * @example 890000
+                 */
+                lineTotal: number;
+            }[];
+            /**
+             * @description Minor units (paisa)
+             * @example 890000
+             */
+            subtotal: number;
+            /**
+             * @description Minor units (paisa)
+             * @example 25000
+             */
+            shippingFee: number;
+            /**
+             * @description Minor units (paisa)
+             * @example 915000
+             */
+            total: number;
+            courier: string | null;
+            trackingNumber: string | null;
+            receiptUploaded: boolean;
+            /** @description How to pay and get in touch */
+            payment: {
+                /** @description Bank transfer orders that aren’t paid yet: where to pay */
+                bankAccounts: {
+                    /** @example Meezan Bank */
+                    bankName: string;
+                    /** @example Acme Perfumes */
+                    accountTitle: string;
+                    /** @example 0123 4567 8901 */
+                    accountNumber: string;
+                    iban: string | null;
+                }[];
+                /** @description Chat with the store on WhatsApp about this order (e.g. to send the receipt); null if the store has no WhatsApp number */
+                whatsappUrl: string | null;
+                /** @description Whether the receipt can be uploaded here (otherwise: send it on WhatsApp) */
+                receiptUploads: boolean;
+                /** @description The store’s checkout note */
+                note: string | null;
+            };
+        };
+        ReceiptUpload: {
+            /** @description PUT the file here from the browser (multipart form data with the file). Valid for 2 hours, once. */
+            uploadUrl: string;
+            /**
+             * @description Send it back to confirm the upload
+             * @example acme/receipts/ACM-1001/4c3f0f2e-8a8b-4b8e-9f43-3f5d1f1c2b7a.jpg
+             */
+            path: string;
         };
         StaffSession: {
             /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
@@ -2525,6 +3000,208 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        /** @description How the store takes orders */
+        CheckoutSettings: {
+            codEnabled: boolean;
+            bankTransferEnabled: boolean;
+            checkoutNote: string | null;
+            /**
+             * @description Minor units (paisa)
+             * @example 25000
+             */
+            shippingFee: number;
+            /** @description Minor units (paisa); null: never free */
+            freeShippingThreshold: number | null;
+            /**
+             * @description Null: the default below
+             * @example ACM
+             */
+            orderPrefix: string | null;
+            /**
+             * @description Used when orderPrefix is null: from the store’s slug
+             * @example ACM
+             */
+            defaultOrderPrefix: string;
+            /**
+             * @description The number the next order gets
+             * @example 1001
+             */
+            nextOrderNumber: number;
+            /** @description Bank transfer is only offered while this is above 0 */
+            activeBankAccounts: number;
+        };
+        /** @description An account shoppers can pay into by bank transfer */
+        BankAccount: {
+            /** Format: uuid */
+            id: string;
+            /** @example Meezan Bank */
+            bankName: string;
+            /** @example Acme Perfumes */
+            accountTitle: string;
+            /** @example 0123 4567 8901 */
+            accountNumber: string;
+            /** @example PK36MEZN0001234567890123 */
+            iban: string | null;
+            isActive: boolean;
+        };
+        AdminOrderList: {
+            items: components["schemas"]["AdminOrderSummary"][];
+            total: number;
+            page: number;
+            pageSize: number;
+            /** @description Orders per status in the whole store (ignoring the filters) */
+            counts: {
+                all: number;
+                PENDING: number;
+                CONFIRMED: number;
+                SHIPPED: number;
+                DELIVERED: number;
+                CANCELLED: number;
+                /** @description Orders with a receipt to check */
+                awaitingVerification: number;
+            };
+        };
+        AdminOrderSummary: {
+            /** Format: uuid */
+            id: string;
+            /** @example ACM-1001 */
+            number: string;
+            /**
+             * @description PENDING (placed) → CONFIRMED → SHIPPED → DELIVERED (complete), or CANCELLED
+             * @enum {string}
+             */
+            status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+            /**
+             * @description COD: cash on delivery. BANK_TRANSFER: direct transfer to one of the store’s bank accounts
+             * @enum {string}
+             */
+            paymentMethod: "COD" | "BANK_TRANSFER";
+            /**
+             * @description UNPAID; AWAITING_VERIFICATION: a receipt was uploaded and the store is checking it; PAID; REFUNDED
+             * @enum {string}
+             */
+            paymentStatus: "UNPAID" | "AWAITING_VERIFICATION" | "PAID" | "REFUNDED";
+            /** @example Sana Khan */
+            customerName: string;
+            customerPhone: string;
+            /** @example Lahore */
+            city: string;
+            /** @description Units ordered */
+            itemCount: number;
+            /**
+             * @description Minor units (paisa)
+             * @example 915000
+             */
+            total: number;
+            receiptUploaded: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description An order with its items and history */
+        AdminOrder: {
+            /** Format: uuid */
+            id: string;
+            /** @example ACM-1001 */
+            number: string;
+            /**
+             * @description PENDING (placed) → CONFIRMED → SHIPPED → DELIVERED (complete), or CANCELLED
+             * @enum {string}
+             */
+            status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+            /**
+             * @description COD: cash on delivery. BANK_TRANSFER: direct transfer to one of the store’s bank accounts
+             * @enum {string}
+             */
+            paymentMethod: "COD" | "BANK_TRANSFER";
+            /**
+             * @description UNPAID; AWAITING_VERIFICATION: a receipt was uploaded and the store is checking it; PAID; REFUNDED
+             * @enum {string}
+             */
+            paymentStatus: "UNPAID" | "AWAITING_VERIFICATION" | "PAID" | "REFUNDED";
+            customer: {
+                name: string;
+                phone: string;
+                email: string;
+            };
+            address: {
+                line: string;
+                city: string;
+                province: string | null;
+                postalCode: string | null;
+            };
+            /** @description From the shopper */
+            notes: string | null;
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @description Null if the size was deleted since */
+                variantId: string | null;
+                /** @description Null if the product was deleted since */
+                productId: string | null;
+                productName: string;
+                brandName: string | null;
+                /** @enum {string} */
+                variantKind: "FULL_SIZE" | "DECANT";
+                variantLabel: string;
+                sku: string | null;
+                imageUrl: string | null;
+                /**
+                 * @description Minor units (paisa)
+                 * @example 915000
+                 */
+                unitPrice: number;
+                quantity: number;
+                /**
+                 * @description Minor units (paisa)
+                 * @example 915000
+                 */
+                lineTotal: number;
+            }[];
+            /**
+             * @description Minor units (paisa)
+             * @example 915000
+             */
+            subtotal: number;
+            /**
+             * @description Minor units (paisa)
+             * @example 915000
+             */
+            shippingFee: number;
+            /**
+             * @description Minor units (paisa)
+             * @example 915000
+             */
+            total: number;
+            courier: string | null;
+            trackingNumber: string | null;
+            cancelReason: string | null;
+            /** @description The uploaded payment receipt; the link works for 10 minutes */
+            receiptUrl: string | null;
+            receiptUploadedAt: string | null;
+            /** @description When the confirmation email was sent; null: not sent */
+            emailSentAt: string | null;
+            /** @description What the order can move to next */
+            nextStatuses: ("PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED")[];
+            /** @description What the payment status can be set to now */
+            paymentActions: ("UNPAID" | "AWAITING_VERIFICATION" | "PAID" | "REFUNDED")[];
+            events: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                type: "PLACED" | "STATUS_CHANGED" | "PAYMENT_CHANGED" | "RECEIPT_UPLOADED" | "NOTE";
+                status: ("PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED") | null;
+                paymentStatus: ("UNPAID" | "AWAITING_VERIFICATION" | "PAID" | "REFUNDED") | null;
+                note: string | null;
+                /** @description Who did it; null: the customer */
+                actorName: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         SuperAdminSession: {
             /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
             token: string;
@@ -2538,7 +3215,7 @@ export interface components {
         SuperAdmin: {
             /** Format: uuid */
             id: string;
-            /** @example you@scentos.pk */
+            /** @example you@thescentsystem.store */
             email: string;
             /** @example Faaiz */
             name: string;
@@ -3262,6 +3939,414 @@ export interface operations {
                 };
             };
             500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontGetCheckoutConfig: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Checkout options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CheckoutConfig"];
+                    };
+                };
+            };
+            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontQuoteCart: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Up to 30 lines; the same size twice is added up */
+                    items: {
+                        /**
+                         * Format: uuid
+                         * @description The size (full bottle or decant), from the product page
+                         */
+                        variantId: string;
+                        /** @example 1 */
+                        quantity: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description The priced cart */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CartQuote"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontPlaceOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    customer: {
+                        /** @example Sana Khan */
+                        name: string;
+                        /** @example +92 300 1234567 */
+                        phone: string;
+                        /**
+                         * Format: email
+                         * @description The order confirmation is sent here
+                         * @example sana@example.com
+                         */
+                        email: string;
+                    };
+                    address: {
+                        /** @example House 12, Street 4, DHA Phase 5 */
+                        line: string;
+                        /** @example Lahore */
+                        city: string;
+                        /** @example Punjab */
+                        province?: string | null;
+                        /** @example 54000 */
+                        postalCode?: string | null;
+                    };
+                    /** @description For the store, e.g. delivery instructions */
+                    notes?: string | null;
+                    /**
+                     * @description COD: cash on delivery. BANK_TRANSFER: direct transfer to one of the store’s bank accounts
+                     * @enum {string}
+                     */
+                    paymentMethod: "COD" | "BANK_TRANSFER";
+                    /** @description Up to 30 lines; the same size twice is added up */
+                    items: {
+                        /**
+                         * Format: uuid
+                         * @description The size (full bottle or decant), from the product page
+                         */
+                        variantId: string;
+                        /** @example 1 */
+                        quantity: number;
+                    }[];
+                    /**
+                     * @description The total (minor units) the shopper was shown. If prices or the delivery fee changed since, the order is refused (409) so they can review it.
+                     * @example 1315000
+                     */
+                    expectedTotal?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description The order, and the token to view it */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlacedOrder"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The cart can’t be ordered as it is: sizes no longer sold or without enough stock (`details` name the lines, e.g. `items.0.quantity`), or the total differs from `expectedTotal`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many orders from this client for this store; try again in a few minutes. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontGetOrder: {
+        parameters: {
+            query: {
+                /** @description The token from the order link (email or confirmation page) */
+                token: string;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Order number */
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontOrder"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description No order with this number and token in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontCreateReceiptUpload: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Order number */
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description The token from the order link (email or confirmation page) */
+                    token: string;
+                    /**
+                     * @description A screenshot or photo of the receipt
+                     * @example image/jpeg
+                     * @enum {string}
+                     */
+                    contentType: "image/jpeg" | "image/png" | "image/webp";
+                    /** @example 248133 */
+                    size: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Where to upload */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReceiptUpload"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description No order with this number and token in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The order doesn’t need a receipt (not a bank transfer, already paid, or cancelled). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many receipt uploads from this client for this store; try again in a few minutes. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description File storage couldn’t be reached; try again. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Receipt uploads aren’t available (not set up, or the receipts bucket isn’t private): send the receipt on WhatsApp. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    storefrontConfirmReceipt: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Order number */
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description The token from the order link (email or confirmation page) */
+                    token: string;
+                    /**
+                     * @description The `path` from the receipt upload
+                     * @example acme/receipts/ACM-1001/4c3f0f2e-8a8b-4b8e-9f43-3f5d1f1c2b7a.jpg
+                     */
+                    path: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontOrder"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            /** @description No order with this number and token in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The order doesn’t need a receipt (not a bank transfer, already paid, or cancelled). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many receipt uploads from this client for this store; try again in a few minutes. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description File storage couldn’t be reached; try again. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Receipt uploads aren’t available (not set up, or the receipts bucket isn’t private): send the receipt on WhatsApp. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     adminLogin: {
@@ -6527,6 +7612,544 @@ export interface operations {
                 };
             };
             /** @description Sign-up not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminGetCheckoutSettings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Checkout settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CheckoutSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminUpdateCheckoutSettings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Offer cash on delivery */
+                    codEnabled: boolean;
+                    /** @description Offer direct bank transfer (needs an active bank account, managed by the owner) */
+                    bankTransferEnabled: boolean;
+                    /**
+                     * @description Shown at checkout and with the payment instructions, e.g. delivery times
+                     * @example Orders are delivered in 3 to 5 working days.
+                     */
+                    checkoutNote?: string | null;
+                    /**
+                     * @description Delivery fee per order, minor units (paisa)
+                     * @example 25000
+                     */
+                    shippingFee: number;
+                    freeShippingThreshold?: number | null;
+                    /** @description Order numbers are <prefix>-<number>. Null: from the store’s address (slug) */
+                    orderPrefix?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The saved settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CheckoutSettings"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListBankAccounts: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The bank accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankAccount"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminReplaceBankAccounts: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Every account, in the order shoppers see them. Replaces the list. */
+                    accounts: {
+                        /** @example Meezan Bank */
+                        bankName: string;
+                        /** @example Acme Perfumes */
+                        accountTitle: string;
+                        /** @example 0123 4567 8901 */
+                        accountNumber: string;
+                        /** @example PK36MEZN0001234567890123 */
+                        iban?: string | null;
+                        /**
+                         * @description Inactive accounts are kept but not shown to shoppers
+                         * @default true
+                         */
+                        isActive?: boolean;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description The saved accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BankAccount"][];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListOrders: {
+        parameters: {
+            query?: {
+                status?: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+                /** @description Payment status, e.g. AWAITING_VERIFICATION: receipts to check */
+                payment?: "UNPAID" | "AWAITING_VERIFICATION" | "PAID" | "REFUNDED";
+                /** @description Order number, customer name, phone or email */
+                q?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrderList"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View orders" (`orders.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminGetOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Order ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrder"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View orders" (`orders.view`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Order not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminChangeOrderStatus: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Order ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description The next status; see `nextStatuses` on the order for what’s allowed
+                     * @enum {string}
+                     */
+                    status: "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+                    /** @description Kept in the order’s history */
+                    note?: string | null;
+                    /**
+                     * @description SHIPPED: the courier
+                     * @example TCS
+                     */
+                    courier?: string | null;
+                    /**
+                     * @description SHIPPED: the tracking number
+                     * @example 772201934
+                     */
+                    trackingNumber?: string | null;
+                    /**
+                     * @description CANCELLED: why (required)
+                     * @example Customer asked to cancel
+                     */
+                    reason?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrder"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Process orders" (`orders.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Order not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The order can’t move to that status from its current one, or it changed in the meantime. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminChangeOrderPayment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Order ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description PAID: payment received. UNPAID: the receipt didn’t check out. REFUNDED: money returned
+                     * @enum {string}
+                     */
+                    paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
+                    note?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrder"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Process orders" (`orders.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Order not found in this store, or store not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The payment can’t change to that status from its current one, or it changed in the meantime. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminAddOrderNote: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path: {
+                /** @description Order ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Customer asked for gift wrapping. */
+                    note: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The updated order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminOrder"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "Process orders" (`orders.manage`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Order not found in this store, or store not found. */
             404: {
                 headers: {
                     [name: string]: unknown;

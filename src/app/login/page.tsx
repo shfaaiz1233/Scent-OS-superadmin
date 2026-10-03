@@ -12,9 +12,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>
-            <h1 className="text-xl">Scent-OS Superadmin</h1>
+            <h1 className="text-xl">The Scent System</h1>
           </CardTitle>
-          <CardDescription>Sign in to manage tenants and subscriptions.</CardDescription>
+          <CardDescription>Console: sign in to manage stores and subscriptions.</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm expired={expired === "1"} />

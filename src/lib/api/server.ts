@@ -39,7 +39,7 @@ async function clientIpHeaders(): Promise<Record<string, string>> {
 }
 
 /**
- * Call the Scent-OS API from the server and unwrap its `{ data }` envelope. Server-only: the
+ * Call The Scent System API from the server and unwrap its `{ data }` envelope. Server-only: the
  * browser never calls the API. Throws `ApiError` for error responses (except 401 with `auth`,
  * which redirects to /login).
  */

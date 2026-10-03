@@ -37,7 +37,7 @@ export function AppSidebar({ superAdmin }: { superAdmin: SuperAdmin }) {
                   S
                 </span>
                 <span className="flex flex-col leading-tight">
-                  <span className="font-semibold">Scent-OS</span>
+                  <span className="font-semibold">The Scent System</span>
                   <span className="text-xs text-muted-foreground">Superadmin</span>
                 </span>
               </Link>

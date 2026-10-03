@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Scent-OS Superadmin", template: "%s | Scent-OS Superadmin" },
-  description: "Manage Scent-OS tenants, subscriptions and payments.",
+  title: { default: "The Scent System Console", template: "%s | The Scent System Console" },
+  description: "Manage The Scent System stores, subscriptions and payments.",
   robots: { index: false, follow: false },
 };
 

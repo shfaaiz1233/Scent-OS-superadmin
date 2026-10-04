@@ -23,8 +23,8 @@ import { activateTenantAction, suspendTenantAction } from "../actions";
 export function StatusActions({ tenantId, tenantName, status }: { tenantId: string; tenantName: string; status: TenantStatus }) {
   const [pending, startTransition] = useTransition();
   const [reason, setReason] = useState("");
-  const canActivate = status === "SETUP" || status === "SUSPENDED";
-  const canSuspend = status === "SETUP" || status === "ACTIVE";
+  const canActivate = status === "SETUP" || status === "SUSPENDED" || status === "PAST_DUE";
+  const canSuspend = status === "SETUP" || status === "ACTIVE" || status === "PAST_DUE";
 
   function run(action: () => Promise<{ ok: boolean; error?: string }>, success: string) {
     startTransition(async () => {
@@ -46,6 +46,8 @@ export function StatusActions({ tenantId, tenantName, status }: { tenantId: stri
               <AlertDialogTitle>Activate {tenantName}?</AlertDialogTitle>
               <AlertDialogDescription>
                 The storefront goes live immediately: shoppers can browse and order. You can suspend it again at any time.
+                {(status === "PAST_DUE" || status === "SUSPENDED") &&
+                  " If its payment is still overdue, the next billing run marks it past due (or suspends it) again: to give it more time, move its due date on the Billing tab."}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

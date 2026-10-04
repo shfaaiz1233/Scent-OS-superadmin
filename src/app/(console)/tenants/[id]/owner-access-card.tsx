@@ -33,8 +33,10 @@ export function OwnerAccessCard({
   function createLink() {
     startTransition(async () => {
       const result = await createOwnerInviteAction(tenantId);
-      if (result.ok) setInvite(result.data);
-      else toast.error(result.error);
+      if (result.ok) {
+        setInvite(result.data);
+        if (result.data.emailedTo) toast.success(`Link emailed to ${result.data.emailedTo}`);
+      } else toast.error(result.error);
     });
   }
 
@@ -68,8 +70,12 @@ export function OwnerAccessCard({
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Send it to the owner (WhatsApp or email). Works once, until {formatDateTime(invite.expiresAt)}. Creating a
-              new link cancels this one.
+              {invite.emailedTo ? (
+                <>Emailed to {invite.emailedTo}. You can also send it yourself (e.g. on WhatsApp).</>
+              ) : (
+                <>Not emailed (email isn’t set up, or it failed): send it to the owner yourself, e.g. on WhatsApp.</>
+              )}{" "}
+              Works once, until {formatDateTime(invite.expiresAt)}. Creating a new link cancels this one.
             </p>
           </div>
         ) : (

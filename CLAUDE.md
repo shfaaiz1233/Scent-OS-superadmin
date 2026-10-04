@@ -49,21 +49,30 @@ src/
 │   └── (console)/              Signed-in console: layout loads the superadmin, sidebar + top bar
 │       ├── page.tsx            Overview (KPIs; Phase 6)
 │       ├── tenants/
-│       │   ├── page.tsx        List: status filter, search, pagination (searchParams)
-│       │   ├── actions.ts      Every tenant server action
-│       │   ├── new/            Create form (slug from name, preset cards)
+│       │   ├── page.tsx        List: status, billing and plan filters, search, pagination (searchParams)
+│       │   ├── actions.ts      Every tenant server action (incl. subscription, due date, record payment, features)
+│       │   ├── new/            Create form (slug from name, preset cards, optional plan via PricingFields)
 │       │   └── [id]/           Detail: header actions (storefront link, open-store-admin-button, status-actions),
 │       │                       provisioning-panel while PROVISIONING, else tabs:
-│       │                       Overview (tenant-details-form, domains-card, owner-access-card) and
-│       │                       Theme (theme-editor + theme-preview). Later: subscription, flags
-│       ├── plans/  payments/  ledger/  settings/   Placeholders until their phases
+│       │                       Overview (tenant-details-form, domains-card, owner-access-card),
+│       │                       Billing (subscription-card, due-date-card, record-payment-card, PaymentsTable),
+│       │                       Features (features-card) and Theme (theme-editor + theme-preview)
+│       ├── plans/              List (search, status), new/, [id]/ (edit, delete-plan-button); plan-form, actions
+│       ├── payments/           List (status tabs, search, pagination); payments-table, payment-actions (receipt,
+│       │                       confirm, reject), actions
+│       ├── settings/           settings-form (notification email, WhatsApp, bank accounts, reminder/grace days),
+│       │                       billing-run-card (Run billing now), actions
+│       ├── ledger/             Placeholder until Phase 6
 ├── components/
 │   ├── ui/                     shadcn/ui, generated; don't hand-edit
 │   ├── app-sidebar.tsx         Navigation (items in lib/navigation.ts); footer: signed-in user + sign out
 │   ├── page-header.tsx         Title + description + actions, at the top of every page
 │   ├── empty-state.tsx         No data yet / not built yet
 │   ├── form-field.tsx          Label + input + field error, for server-action forms
-│   ├── status-badge.tsx        TenantStatusBadge, TENANT_STATUSES, tenantStatusLabel
+│   ├── status-badge.tsx        TenantStatusBadge, PaymentStatusBadge, BillingStateBadge (+ the status lists and labels)
+│   ├── money-input.tsx         Rupee input with an "Rs" prefix (parse with parseRupees)
+│   ├── pricing-fields.tsx      Plan, cycle, pricing mode and value, with the resulting price
+│   ├── features-editor.tsx     PlanFeaturesEditor (a plan's values), FeatureOverridesEditor (a store's overrides)
 │   ├── theme-option.tsx        ThemeOption (a radio card) + ThemeThumbnail (a theme drawn from its tokens)
 │   ├── providers.tsx, theme-toggle.tsx
 └── lib/
@@ -71,7 +80,9 @@ src/
     ├── api/                    server.ts (api(), ApiError, SESSION_COOKIE), schema.d.ts (generated), types.ts
     ├── session.ts              getCurrentSuperAdmin()
     ├── action-result.ts        ActionResult, formValues, toActionError
-    ├── format.ts               formatDate, formatDateTime
+    ├── format.ts               formatDate, formatDateTime, formatDay (API calendar dates), formatPrice, parseRupees, rupeesInput
+    ├── pricing.ts              PricingDraft → SubscriptionInput, previewPrice (mirrors the API), labels
+    ├── features.ts             featureValueLabel, featuresSummary (server-safe)
     ├── theme-fonts.ts          The store theme fonts (preload: false), for the theme preview
     ├── theme-font-family.ts    THEME_FONT_FAMILY: theme font → CSS font-family (client-safe)
     └── utils.ts                cn()
@@ -88,6 +99,14 @@ src/
   - **Picker:** a card per preset plus **Custom** (`ThemeOption`). The selected card is computed: the preset whose tokens equal the draft (`sameTheme`, ignoring key order and hex case), else Custom. Every token change goes through `edit()`, which also remembers the latest custom design, so trying presets never loses it and clicking Custom brings it back. A custom theme keeps `preset` as the key it started from ("based on").
   - **Layout:** at `xl` the preview column (`aside`) is `sticky` beside the scrolling form, with Save/Discard at its top; the preview scrolls on its own if it's taller than the window. The grid needs `items-start`, or the sticky column stretches and never sticks.
   - **Contrast check:** `CONTRAST_PAIRS` lists the foreground/background token pairs the storefront actually uses; pairs below `MIN_CONTRAST` (4.5:1, WCAG AA) are flagged under each colour and in a summary. It warns but doesn't block saving. Add a pair whenever the storefront starts using a new combination.
+
+## Billing pages
+
+- **Money** is minor units (paisa) from the API. Inputs take rupees (`MoneyInput`, `parseRupees`); show amounts with `formatPrice`. Billing dates are calendar days (`"2026-11-04"`): format them with `formatDay`, never `new Date()` in local time.
+- **Prices:** `previewPrice` mirrors the API's `effectivePrice` (a percentage off rounds to whole rupees). Keep them in step; the API stores the real price.
+- **Confirmations:** starting billing or changing a plan or price, moving a due date, recording, confirming or rejecting a payment, editing a plan stores are on, and running billing all go through an `AlertDialog` that states the effect.
+- **Receipts** open through `receiptLinkAction` (a 10-minute signed link), in a tab opened before the await, like Open store admin.
+- Helpers used by server components must not live in `"use client"` modules (Next refuses to call them on the server): shared logic goes in `lib/`.
 
 ## Conventions
 

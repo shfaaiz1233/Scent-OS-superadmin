@@ -3,18 +3,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
-import { TenantStatusBadge } from "@/components/status-badge";
+import { BillingStateBadge, TenantStatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiError, api } from "@/lib/api/server";
-import type { TenantDetail, ThemePreset } from "@/lib/api/types";
-import { formatDateTime } from "@/lib/format";
+import type { BillingPaymentList, FeatureInfo, Plan, TenantBilling, TenantDetail, ThemePreset } from "@/lib/api/types";
+import { formatDateTime, formatPrice } from "@/lib/format";
+import { PER_CYCLE } from "@/lib/pricing";
+import { PaymentsTable } from "../../payments/payments-table";
 import { DomainsCard } from "./domains-card";
+import { DueDateCard } from "./due-date-card";
+import { FeaturesCard } from "./features-card";
 import { OpenStoreAdminButton } from "./open-store-admin-button";
 import { OwnerAccessCard } from "./owner-access-card";
 import { ProvisioningPanel } from "./provisioning-panel";
+import { RecordPaymentCard } from "./record-payment-card";
 import { StatusActions } from "./status-actions";
+import { SubscriptionCard } from "./subscription-card";
 import { TenantDetailsForm } from "./tenant-details-form";
 import { ThemeEditor } from "./theme-editor";
 
@@ -34,8 +40,18 @@ export async function generateMetadata({ params }: PageProps<"/tenants/[id]">): 
 
 export default async function TenantPage({ params }: PageProps<"/tenants/[id]">) {
   const { id } = await params;
-  const [tenant, presets] = await Promise.all([getTenant(id), api<ThemePreset[]>("/api/superadmin/theme-presets")]);
+  const tenant = await getTenant(id);
+  const [presets, billing, plans, payments, catalogue] = await Promise.all([
+    api<ThemePreset[]>("/api/superadmin/theme-presets"),
+    api<TenantBilling>(`/api/superadmin/tenants/${tenant.id}/billing`),
+    api<Plan[]>("/api/superadmin/plans?status=all"),
+    api<BillingPaymentList>(`/api/superadmin/payments?tenantId=${tenant.id}&pageSize=10`),
+    api<FeatureInfo[]>("/api/superadmin/features"),
+  ]);
   const provisioning = tenant.status === "PROVISIONING";
+  // A store can be put on any active plan, and stay on its current one even if that was deactivated.
+  const choosable = plans.filter((p) => p.isActive || p.id === billing.subscription?.plan.id);
+  const sub = billing.subscription;
 
   return (
     <>
@@ -59,6 +75,12 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
 
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <TenantStatusBadge status={tenant.status} />
+        <BillingStateBadge state={billing.state} daysUntilDue={billing.daysUntilDue} />
+        {sub && (
+          <span className="text-muted-foreground tabular-nums">
+            {sub.plan.name} · {formatPrice(sub.price)} {PER_CYCLE[sub.billingCycle]}
+          </span>
+        )}
         {tenant.statusReason && <span className="text-muted-foreground">Reason: {tenant.statusReason}</span>}
         {tenant.statusChangedAt && (
           <span className="text-muted-foreground">since {formatDateTime(tenant.statusChangedAt)}</span>
@@ -71,6 +93,8 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
         <Tabs defaultValue="overview" className="gap-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
+            <TabsTrigger value="features">Features</TabsTrigger>
             <TabsTrigger value="theme">Theme</TabsTrigger>
           </TabsList>
 
@@ -96,6 +120,39 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="billing" className="grid gap-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <SubscriptionCard key={sub?.updatedAt ?? "unbilled"} tenantId={tenant.id} tenantName={tenant.name} billing={billing} plans={choosable} />
+              {sub && (
+                <div className="grid content-start gap-4">
+                  <DueDateCard key={billing.dueDate ?? "none"} tenantId={tenant.id} tenantName={tenant.name} billing={billing} />
+                  <RecordPaymentCard key={sub.price} tenantId={tenant.id} tenantName={tenant.name} status={tenant.status} billing={billing} />
+                </div>
+              )}
+            </div>
+            <section id="payments" className="grid gap-3">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-base font-semibold">Payments</h2>
+                {payments.total > payments.items.length && (
+                  <Link href={`/payments?status=all&q=${encodeURIComponent(tenant.slug)}`} className="text-sm text-muted-foreground hover:underline">
+                    All {payments.total} payments →
+                  </Link>
+                )}
+              </div>
+              {payments.items.length > 0 ? (
+                <PaymentsTable payments={payments.items} showStore={false} />
+              ) : (
+                <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+                  No payments yet. The owner sends them from /admin → Billing; record one here if they paid another way.
+                </p>
+              )}
+            </section>
+          </TabsContent>
+
+          <TabsContent value="features">
+            <FeaturesCard key={JSON.stringify(billing.features.overrides)} tenantId={tenant.id} billing={billing} catalogue={catalogue} />
           </TabsContent>
 
           <TabsContent value="theme">

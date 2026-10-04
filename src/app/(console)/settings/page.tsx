@@ -1,19 +1,20 @@
-import { SettingsIcon } from "lucide-react";
 import type { Metadata } from "next";
-import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { api } from "@/lib/api/server";
+import type { PlatformSettings } from "@/lib/api/types";
+import { BillingRunCard } from "./billing-run-card";
+import { SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Settings" };
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const settings = await api<PlatformSettings>("/api/superadmin/settings");
+
   return (
     <>
-      <PageHeader title="Settings" description="Platform settings." />
-      <EmptyState
-        icon={SettingsIcon}
-        title="Settings arrive in Phase 5"
-        description="Your notification email for the daily unpaid-tenants digest, the bank details tenants pay into, reminder and grace days."
-      />
+      <PageHeader title="Settings" description="Billing: where owners pay you, reminders and grace days, and where billing news goes." />
+      <SettingsForm settings={settings} />
+      <BillingRunCard schedule={settings.billingJobSchedule} />
     </>
   );
 }

@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * Get store config
-         * @description The store's identity, status and theme. The storefront fetches this before rendering anything (cached for 20 minutes) and polls it every 20 minutes to pick up changes. Stores in `SETUP` or `SUSPENDED` are served too, so the storefront can show "Opening soon" / "Temporarily unavailable" in their own theme. A store without a theme gets the default preset.
+         * @description The store's identity, status and theme. The storefront fetches this before rendering anything (cached for 20 minutes) and polls it every 20 minutes to pick up changes. Stores in `SETUP` or `SUSPENDED` are served too, so the storefront can show "Opening soon" / "Temporarily unavailable" in their own theme. A store in its billing grace period (PAST_DUE) is reported as ACTIVE. A store without a theme gets the default preset.
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
@@ -35,7 +35,7 @@ export interface paths {
         };
         /**
          * List products
-         * @description A page of products in a collection (default `all`), optionally searched and filtered. Values within one filter match any (OR); different filters must all match (AND). In the Decants collection, prices, sizes and the price filter are about decants. Only ACTIVE products of live (ACTIVE) stores.
+         * @description A page of products in a collection (default `all`), optionally searched and filtered. Values within one filter match any (OR); different filters must all match (AND). In the Decants collection, prices, sizes and the price filter are about decants. Only ACTIVE products of live stores (ACTIVE or PAST_DUE).
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
@@ -57,7 +57,7 @@ export interface paths {
         };
         /**
          * List filters
-         * @description The brands, genders, types, notes, sizes and price range of the products in a collection (and search), with counts: what the shopper can filter on. Counts ignore the shopper's other filters. Only ACTIVE products of live (ACTIVE) stores.
+         * @description The brands, genders, types, notes, sizes and price range of the products in a collection (and search), with counts: what the shopper can filter on. Counts ignore the shopper's other filters. Only ACTIVE products of live stores (ACTIVE or PAST_DUE).
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
@@ -79,7 +79,7 @@ export interface paths {
         };
         /**
          * Get a product
-         * @description The product page: images, full sizes and decants (each with price and availability), and the note pyramid with each note's olfactory family. Only ACTIVE products of live (ACTIVE) stores.
+         * @description The product page: images, full sizes and decants (each with price and availability), and the note pyramid with each note's olfactory family. Only ACTIVE products of live stores (ACTIVE or PAST_DUE).
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
@@ -101,7 +101,7 @@ export interface paths {
         };
         /**
          * List related products
-         * @description Other products of the same brand or gender, featured and newest first. Only ACTIVE products of live (ACTIVE) stores.
+         * @description Other products of the same brand or gender, featured and newest first. Only ACTIVE products of live stores (ACTIVE or PAST_DUE).
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
@@ -167,7 +167,7 @@ export interface paths {
         };
         /**
          * Get site content
-         * @description Branding (logo, favicon, description), the announcement bar, header menu, footer columns and text, contact details, social links and whether the newsletter form shows. Every reachable store (SETUP, ACTIVE, SUSPENDED) answers.
+         * @description Branding (logo, favicon, description), the announcement bar, header menu, footer columns and text, contact details, social links and whether the newsletter form shows. Every reachable store (SETUP, ACTIVE, PAST_DUE, SUSPENDED) answers.
          *
          *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
          */
@@ -391,7 +391,7 @@ export interface paths {
          * Sign in
          * @description Sign a staff user in to this store's admin. The token is only valid for this store. Rate limited to 10 attempts per 15 minutes per client and store.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
          */
         post: operations["adminLogin"];
         delete?: never;
@@ -413,7 +413,7 @@ export interface paths {
          * Set password from a link
          * @description Redeem a one-time set-password link (sent to a new owner or staff user, or as a password reset): sets the password, signs out the user's other sessions, and signs them in. Links expire after 7 days and work once.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
          */
         post: operations["adminSetPassword"];
         delete?: never;
@@ -435,7 +435,7 @@ export interface paths {
          * Sign in as Platform
          * @description Redeem a one-time link from the console ("Open store admin", valid 2 minutes, this store only): the superadmin gets a 4-hour store admin session as "Platform", with owner rights. Signing the superadmin out everywhere ends it. Rate limited like sign-in.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
          */
         post: operations["adminPlatformSignIn"];
         delete?: never;
@@ -453,9 +453,9 @@ export interface paths {
         };
         /**
          * Get current user
-         * @description The signed-in staff user and their store (name, status).
+         * @description The signed-in staff user and their store: name, status, what its plan includes (`features`, to hide or explain what it doesn’t) and where it stands with its subscription (`billing`, for a banner).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
          */
         get: operations["adminGetMe"];
         put?: never;
@@ -477,7 +477,7 @@ export interface paths {
          * Get the CSV format
          * @description The columns the product import understands, with descriptions and sample rows for a template file.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetProductImportFormat"];
         put?: never;
@@ -501,7 +501,7 @@ export interface paths {
          * Import products from CSV
          * @description Send the CSV as the body (`Content-Type: text/csv`, up to 2000 rows). One row per size; rows with the same product and brand are one product. Existing products (same name and brand) are updated, their sizes matched by SKU, else by label (decants by ml); new ones are created. Columns left out keep their current values. With `dryRun=true` (the default) nothing changes: the report says what would be created and updated, and lists every problem by row. Nothing is imported while the file has problems. Brands and notes are created as needed.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminImportProducts"];
         delete?: never;
@@ -521,7 +521,7 @@ export interface paths {
          * Export products as CSV
          * @description Every product (any status) in the import format, one row per size, UTF-8 with a byte order mark (opens in Excel). Edit it and import it back to update prices and stock in bulk.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminExportProducts"];
         put?: never;
@@ -543,7 +543,7 @@ export interface paths {
          * List products
          * @description A page of products, recently changed first, with search and filters. ARCHIVED ones only when asked for.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListProducts"];
         put?: never;
@@ -553,7 +553,7 @@ export interface paths {
          *
          *     **Brand and notes** can be given by name: an existing brand or note with that name (ignoring case and accents) is used, otherwise it is created. **Sizes** are full bottles; **decants** are small sizes poured from the bottle, offered only while `decantsEnabled` is true. A product can only be ACTIVE with at least one active size or decant. Archiving or restoring (status to or from ARCHIVED) also needs "Archive and delete products". Prices are minor units (paisa).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreateProduct"];
         delete?: never;
@@ -573,7 +573,7 @@ export interface paths {
          * Get a product
          * @description Everything the product form edits, plus the hand-picked collections it is in.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetProduct"];
         /**
@@ -582,7 +582,7 @@ export interface paths {
          *
          *     **Brand and notes** can be given by name: an existing brand or note with that name (ignoring case and accents) is used, otherwise it is created. **Sizes** are full bottles; **decants** are small sizes poured from the bottle, offered only while `decantsEnabled` is true. A product can only be ACTIVE with at least one active size or decant. Archiving or restoring (status to or from ARCHIVED) also needs "Archive and delete products". Prices are minor units (paisa).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateProduct"];
         post?: never;
@@ -590,7 +590,7 @@ export interface paths {
          * Delete a draft
          * @description Delete a DRAFT product for good. Published products are archived instead (status ARCHIVED).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         delete: operations["adminDeleteProduct"];
         options?: never;
@@ -609,7 +609,7 @@ export interface paths {
          * List brands
          * @description Every brand, A–Z, with how many products use it. The product form uses this for its brand search.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListBrands"];
         put?: never;
@@ -617,7 +617,7 @@ export interface paths {
          * Create a brand
          * @description Add a brand. (Brands typed into the product form are created when the product is saved.)
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreateBrand"];
         delete?: never;
@@ -638,7 +638,7 @@ export interface paths {
          * Update a brand
          * @description Rename it or change its logo. Renaming also changes its slug, used in storefront filter links.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateBrand"];
         post?: never;
@@ -646,7 +646,7 @@ export interface paths {
          * Delete a brand
          * @description Delete a brand that no product uses.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         delete: operations["adminDeleteBrand"];
         options?: never;
@@ -665,7 +665,7 @@ export interface paths {
          * List notes
          * @description Every note, A–Z, with its olfactory family and how many products use it.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListNotes"];
         put?: never;
@@ -673,7 +673,7 @@ export interface paths {
          * Create a note
          * @description Add a note. (Notes typed into the product form are created when the product is saved.)
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreateNote"];
         delete?: never;
@@ -694,7 +694,7 @@ export interface paths {
          * Update a note
          * @description Rename it or change its olfactory family. Renaming also changes its slug, used in filter links.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateNote"];
         post?: never;
@@ -702,7 +702,7 @@ export interface paths {
          * Delete a note
          * @description Delete a note that no product pyramid uses.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         delete: operations["adminDeleteNote"];
         options?: never;
@@ -721,7 +721,7 @@ export interface paths {
          * List olfactory families
          * @description The olfactory families (Citrus, Woody…) a note can belong to. Shared by every store; managed by the platform.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListNoteCategories"];
         put?: never;
@@ -743,7 +743,7 @@ export interface paths {
          * List collections
          * @description The hand-picked collections, A–Z. Built-in collections are rules and aren’t listed here.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListCollections"];
         put?: never;
@@ -753,7 +753,7 @@ export interface paths {
          *
          *     The slug (default: from the name) makes the page /collections/<slug>; built-in slugs (all, new-arrivals, men, women, unisex, decants, sale, gift-sets) are reserved. `productIds` sets the products and their order.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreateCollection"];
         delete?: never;
@@ -773,7 +773,7 @@ export interface paths {
          * Get a collection
          * @description The collection and its products, in order (any status; only ACTIVE ones show on the storefront).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetCollection"];
         /**
@@ -782,7 +782,7 @@ export interface paths {
          *
          *     The slug (default: from the name) makes the page /collections/<slug>; built-in slugs (all, new-arrivals, men, women, unisex, decants, sale, gift-sets) are reserved. `productIds` sets the products and their order.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateCollection"];
         post?: never;
@@ -790,7 +790,7 @@ export interface paths {
          * Delete a collection
          * @description Delete the collection. Its products are not affected.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         delete: operations["adminDeleteCollection"];
         options?: never;
@@ -809,7 +809,7 @@ export interface paths {
          * Get upload settings
          * @description Whether image uploads are on for this server, and the size and type limits. When they are off (e.g. locally without storage keys), forms take image URLs instead (picsum.photos placeholders).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetUploadConfig"];
         put?: never;
@@ -833,7 +833,7 @@ export interface paths {
          * Create a signed upload
          * @description A one-time URL to upload one image (JPG, PNG or WebP, up to 5 MB) straight to the store's bucket. Upload with `PUT uploadUrl` from the browser, then save `publicUrl` on the product, brand or collection. Product images need "Add products" or "Edit products"; brand logos "Manage brands"; collection images "Manage collections"; slides and content images "Edit store content"; the store logo and favicon (branding) "Edit store details".
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreateUpload"];
         delete?: never;
@@ -853,15 +853,15 @@ export interface paths {
          * List staff
          * @description Everyone with access to the admin: the owner first, then staff A–Z. Owner only.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListStaff"];
         put?: never;
         /**
          * Invite a staff user
-         * @description Add a staff user with a role, without a password, and get their one-time set-password link (valid 7 days) on the store’s primary domain. Send it to them yourself (email sending arrives in a later phase). Owner only.
+         * @description Add a staff user with a role, without a password, and get their one-time set-password link (valid 7 days) on the store’s primary domain, emailed to them when email is set up (`link.emailedTo`; otherwise send it yourself). Owner only. The store’s plan may limit staff accounts (`staffAccounts`; disabled staff don’t count).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminInviteStaff"];
         delete?: never;
@@ -885,9 +885,9 @@ export interface paths {
         head?: never;
         /**
          * Update a staff user
-         * @description Change their name, phone, role or status. A new role applies to their next request; disabling signs them out everywhere at once. Owner only; the owner’s own account can’t be changed here.
+         * @description Change their name, phone, role or status. A new role applies to their next request; disabling signs them out everywhere at once. Owner only; the owner’s own account can’t be changed here. Enabling a disabled user needs a free staff account in the store’s plan.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         patch: operations["adminUpdateStaff"];
         trace?: never;
@@ -903,9 +903,9 @@ export interface paths {
         put?: never;
         /**
          * Create a set-password link
-         * @description A new one-time set-password link for a staff user (also a password reset), valid 7 days. Replaces any unused link. Owner only.
+         * @description A new one-time set-password link for a staff user (also a password reset), valid 7 days, emailed to them when email is set up (`emailedTo`). Replaces any unused link. Owner only.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreateStaffLink"];
         delete?: never;
@@ -925,7 +925,7 @@ export interface paths {
          * List permissions
          * @description Every permission a role can grant, grouped and in display order. Staff, roles, bank details and billing are owner-only and never part of a role. Any signed-in staff user.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListPermissions"];
         put?: never;
@@ -947,7 +947,7 @@ export interface paths {
          * List roles
          * @description The store’s roles, A–Z, with how many staff have each. Owner only.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListRoles"];
         put?: never;
@@ -955,7 +955,7 @@ export interface paths {
          * Create a role
          * @description A named set of permissions to give staff. Owner only.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreateRole"];
         delete?: never;
@@ -976,7 +976,7 @@ export interface paths {
          * Update a role
          * @description Rename it or change its permissions; applies at once to everyone with the role. Owner only.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateRole"];
         post?: never;
@@ -984,7 +984,7 @@ export interface paths {
          * Delete a role
          * @description Delete a role nobody has. Owner only.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         delete: operations["adminDeleteRole"];
         options?: never;
@@ -1003,14 +1003,14 @@ export interface paths {
          * Get header and footer
          * @description The announcement bar, header menu, footer columns, footer text and the newsletter form setting.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetNavigation"];
         /**
          * Save header and footer
          * @description Replace the announcement bar, both menus and the footer text. Links to unpublished pages are hidden on the storefront. Storefronts show the change on their next page load.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateNavigation"];
         post?: never;
@@ -1031,14 +1031,14 @@ export interface paths {
          * List slides
          * @description The homepage slider, in order, including inactive slides.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListSlides"];
         /**
          * Save the slider
-         * @description Replace every slide (up to 10), in order. Images must be uploaded (or picsum.photos placeholders). Storefronts show the change on their next page load.
+         * @description Replace every slide (up to 10), in order. Images must be uploaded (or picsum.photos placeholders). Needs the store’s plan to include the slider (`heroSlider`); without it shoppers don’t see slides. Storefronts show the change on their next page load.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminReplaceSlides"];
         post?: never;
@@ -1059,14 +1059,14 @@ export interface paths {
          * List homepage sections
          * @description The sections below the slider, top to bottom, including hidden ones.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListHomeSections"];
         /**
          * Save the homepage
          * @description Replace every section (up to 20), top to bottom. Product grids need an existing collection, brand strips existing brands (400 with the field otherwise). Storefronts show the change on their next page load.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminReplaceHomeSections"];
         post?: never;
@@ -1087,7 +1087,7 @@ export interface paths {
          * List pages
          * @description Every content page, A–Z by title, published or not.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListPages"];
         put?: never;
@@ -1095,7 +1095,7 @@ export interface paths {
          * Create a page
          * @description A page at /pages/<slug> (default: from the title). The body is Markdown.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminCreatePage"];
         delete?: never;
@@ -1115,14 +1115,14 @@ export interface paths {
          * Get a page
          * @description The page with its Markdown text.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetPage"];
         /**
          * Update a page
          * @description Replace the page. Changing its slug changes its address; menu links to the old one stop showing. Storefronts show the change on their next page load.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdatePage"];
         post?: never;
@@ -1130,7 +1130,7 @@ export interface paths {
          * Delete a page
          * @description Delete the page. Menu links to it stop showing.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         delete: operations["adminDeletePage"];
         options?: never;
@@ -1151,7 +1151,7 @@ export interface paths {
          * Add suggested content
          * @description Add the suggested content the store is missing: header and footer menus (when empty), the standard pages as drafts (About, Shipping, Returns, Contact; by address) and homepage sections (when there are none). Never changes what exists. New stores get this when they are created.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminAddDefaultContent"];
         delete?: never;
@@ -1171,14 +1171,14 @@ export interface paths {
          * Get store details
          * @description The store’s name, description, logo, favicon, contact details and social links.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetSettings"];
         /**
          * Save store details
          * @description Replace the store’s details. Renaming the store changes its name everywhere, including in the platform’s console. Storefronts show the change on their next page load.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateSettings"];
         post?: never;
@@ -1199,7 +1199,7 @@ export interface paths {
          * List newsletter sign-ups
          * @description Emails signed up through the storefront, newest first. Up to 1000 per page (for downloads).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListSubscribers"];
         put?: never;
@@ -1224,7 +1224,7 @@ export interface paths {
          * Remove a sign-up
          * @description Remove an email from the list, e.g. when someone asks to unsubscribe.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         delete: operations["adminDeleteSubscriber"];
         options?: never;
@@ -1243,14 +1243,14 @@ export interface paths {
          * Get checkout settings
          * @description Payment methods (cash on delivery, bank transfer), the delivery fee and free-delivery threshold, the checkout note and the order number prefix, with the next order number and how many bank accounts are active.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetCheckoutSettings"];
         /**
          * Save checkout settings
-         * @description At least one payment method must be on. Bank transfer is only offered to shoppers while the store also has an active bank account (the owner manages those). A new prefix applies to the next orders; numbers keep counting up.
+         * @description At least one payment method must be on. Bank transfer is only offered to shoppers while the store also has an active bank account (the owner manages those) and the store’s plan includes it (`bankTransfer`). A new prefix applies to the next orders; numbers keep counting up.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminUpdateCheckoutSettings"];
         post?: never;
@@ -1271,14 +1271,14 @@ export interface paths {
          * List bank accounts
          * @description Owner only. The accounts shown to shoppers who pay by bank transfer, in order.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListBankAccounts"];
         /**
          * Save bank accounts
          * @description Owner only. Replaces the list (up to 5), in order. Unpaid bank-transfer orders show the active accounts as they are at the time.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         put: operations["adminReplaceBankAccounts"];
         post?: never;
@@ -1299,7 +1299,7 @@ export interface paths {
          * List orders
          * @description Orders, newest first, filtered by status, payment status and a search (number, customer name, phone or email). `counts` has the number of orders per status in the whole store, for tabs.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminListOrders"];
         put?: never;
@@ -1321,7 +1321,7 @@ export interface paths {
          * Get an order
          * @description An order with its items, customer, address, payment receipt (a link valid for 10 minutes), history, and what its status and payment can change to next.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         get: operations["adminGetOrder"];
         put?: never;
@@ -1345,7 +1345,7 @@ export interface paths {
          * Change an order’s status
          * @description PENDING → CONFIRMED → SHIPPED (with courier and tracking number) → DELIVERED; any open order can be CANCELLED with a reason. Cancelling puts the stock back. Delivering a cash-on-delivery order marks it paid, and every delivered order counts in the platform’s sales ledger. Each change is added to the order’s history.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminChangeOrderStatus"];
         delete?: never;
@@ -1367,7 +1367,7 @@ export interface paths {
          * Change an order’s payment
          * @description Mark the payment received (PAID), reject an uploaded receipt (back to UNPAID, so the shopper can send another), or record a refund (REFUNDED; for a delivered order it also comes off the sales ledger). See `paymentActions` on the order.
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminChangeOrderPayment"];
         delete?: never;
@@ -1389,9 +1389,81 @@ export interface paths {
          * Add a note to an order
          * @description An internal note in the order’s history (shoppers never see it).
          *
-         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE and SUSPENDED are reachable. Responds 404 `Store not found` otherwise.
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
          */
         post: operations["adminAddOrderNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get billing
+         * @description Owner only. The store’s plan and price, its due date and where it stands (paid, due soon, overdue with the end of the grace period, suspended), what the plan includes, the platform’s bank accounts and WhatsApp number to pay, whether receipts can be uploaded, and whether a payment is waiting to be checked. Works in a SUSPENDED store.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
+         */
+        get: operations["adminGetBilling"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/billing/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List payments
+         * @description Owner only. The store’s payments to the platform, newest first, optionally by status.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
+         */
+        get: operations["adminListBillingPayments"];
+        put?: never;
+        /**
+         * Send a payment
+         * @description Owner only. Tell the platform about a payment (amount, bank reference, note, and the receipt uploaded through `POST …/receipt-upload`). It waits as SUBMITTED until the platform confirms it, which extends the subscription and reopens a suspended store; the platform is emailed. One at a time: another can be sent once it’s checked.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
+         */
+        post: operations["adminSubmitBillingPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/billing/receipt-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a receipt upload URL
+         * @description Owner only. A one-time URL to upload the payment receipt (a screenshot or photo, up to 5 MB) straight to private storage from the browser. Send the returned `path` as `receiptPath` with the payment.
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
+         */
+        post: operations["adminCreateBillingReceiptUpload"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1447,13 +1519,13 @@ export interface paths {
         };
         /**
          * List tenants
-         * @description Every store, newest first, with optional status filter and search (name, slug, domain, owner email).
+         * @description Every store, newest first, with its plan and paid-until date. Filter by status, plan or billing state, and search (name, slug, domain, owner email).
          */
         get: operations["superAdminListTenants"];
         put?: never;
         /**
          * Create a tenant
-         * @description Register a store and start provisioning it in the background: create and migrate `<slug>_schema`, seed defaults, create the owner's staff account. Responds at once with status `PROVISIONING`; poll `GET /api/superadmin/tenants/{id}` until it is `SETUP` (or `provisioningError` is set). Then send the owner a link from `POST …/owner-invite`. The theme is a copy of the chosen preset.
+         * @description Register a store and start provisioning it in the background: create and migrate `<slug>_schema`, seed defaults, create the owner's staff account. Responds at once with status `PROVISIONING`; poll `GET /api/superadmin/tenants/{id}` until it is `SETUP` (or `provisioningError` is set). Then send the owner a link from `POST …/owner-invite`. The theme is a copy of the chosen preset. With `subscription`, the store is put on a plan straight away (billing starts with its first confirmed payment).
          */
         post: operations["superAdminCreateTenant"];
         delete?: never;
@@ -1497,7 +1569,7 @@ export interface paths {
         put?: never;
         /**
          * Activate a tenant
-         * @description Put the store live (from `SETUP` or `SUSPENDED`). Its storefronts are refreshed immediately.
+         * @description Put the store live (from `SETUP`, `PAST_DUE` or `SUSPENDED`). Its storefronts are refreshed immediately. Billing puts an overdue store back to PAST_DUE (or suspends it) on its next run: to give an unpaid store more time, move its due date instead (`POST …/subscription/period`).
          */
         post: operations["superAdminActivateTenant"];
         delete?: never;
@@ -1517,7 +1589,7 @@ export interface paths {
         put?: never;
         /**
          * Suspend a tenant
-         * @description Take the store offline (from `SETUP` or `ACTIVE`): its storefront shows "Temporarily unavailable" immediately. Data is kept; activate again at any time.
+         * @description Take the store offline (from `SETUP`, `ACTIVE` or `PAST_DUE`): its storefront shows "Temporarily unavailable" immediately and its admin is limited to Billing. Data is kept; activate again at any time.
          */
         post: operations["superAdminSuspendTenant"];
         delete?: never;
@@ -1577,7 +1649,7 @@ export interface paths {
         put?: never;
         /**
          * Add a domain
-         * @description Serve the store on another hostname (e.g. `www.acme.com`). Point the domain at the storefront deployment separately. The first domain is the primary one, used in links.
+         * @description Serve the store on another hostname (e.g. `www.acme.com`). Point the domain at the storefront deployment separately. The first domain is the primary one, used in links. The store’s plan may limit how many domains it has (feature `customDomains`; raise it with an override).
          */
         post: operations["superAdminAddTenantDomain"];
         delete?: never;
@@ -1637,7 +1709,7 @@ export interface paths {
         put?: never;
         /**
          * Create an owner set-password link
-         * @description A one-time link (valid 7 days) for the owner to set their /admin password on the store's primary domain. Also works as a password reset. Replaces any earlier unused link. Send it to the owner yourself (email sending arrives in a later phase).
+         * @description A one-time link (valid 7 days) for the owner to set their /admin password on the store's primary domain. Also works as a password reset. Replaces any earlier unused link. Emailed to the owner when email is set up (`emailedTo`); otherwise send it yourself.
          */
         post: operations["superAdminCreateOwnerInvite"];
         delete?: never;
@@ -1666,6 +1738,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/superadmin/tenants/{id}/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a store’s billing
+         * @description The store’s subscription (plan, cycle, pricing, price, due date), where it stands (`state`, days until due, end of the grace period), its features (the plan’s, its overrides, and the result), and how many of its payments wait to be checked. Dates are calendar days in Pakistan time.
+         */
+        get: operations["superAdminGetTenantBilling"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set a store’s plan and pricing
+         * @description Put the store on a plan, or change its plan, billing cycle or pricing (the plan’s price, a percentage or amount off, or a custom price). The price is worked out and stored; the due date doesn’t change. A new subscription waits for its first confirmed payment, which starts the first period; a free one (price 0) starts at once. The store gets the new plan’s features straight away. Recorded in the audit log (before and after).
+         */
+        put: operations["superAdminSetSubscription"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/subscription/period": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move a store’s due date
+         * @description Set the date the paid period ends, e.g. to give free days or correct a mistake, with a reason for the audit log. An overdue (PAST_DUE) store becomes ACTIVE when the new date is in the future; a suspended store stays suspended until you activate it.
+         */
+        post: operations["superAdminSetPeriodEnd"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set a store’s feature overrides
+         * @description Features that differ from the store’s plan, e.g. more staff accounts or the slider on a smaller plan. Replaces all of its overrides; `{}` removes them. Applies at once (storefronts are refreshed).
+         */
+        put: operations["superAdminSetFeatureOverrides"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/tenants/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a payment
+         * @description A payment received outside the store’s Billing page (e.g. a receipt sent on WhatsApp, or cash). It is recorded and confirmed at once: it pays for the next cycle and the store becomes ACTIVE, like `POST /api/superadmin/payments/{id}/confirm`. The owner is emailed.
+         */
+        post: operations["superAdminRecordPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/superadmin/theme-presets": {
         parameters: {
             query?: never;
@@ -1678,6 +1850,222 @@ export interface paths {
          * @description The 5 storefront presets with their full token sets, for the theme editor.
          */
         get: operations["superAdminListThemePresets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List plans
+         * @description Every plan with its prices, features and number of stores: active plans first, then by monthly price. Search by name or description.
+         */
+        get: operations["superAdminListPlans"];
+        put?: never;
+        /**
+         * Create a plan
+         * @description A new plan. Features left out get the catalogue default (`GET /api/superadmin/features`). Recorded in the audit log.
+         */
+        post: operations["superAdminCreatePlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a plan
+         * @description One plan, with its complete features.
+         */
+        get: operations["superAdminGetPlan"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a plan
+         * @description Only a plan no store is on can be deleted; deactivate the others instead.
+         */
+        delete: operations["superAdminDeletePlan"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a plan
+         * @description Change some of a plan’s fields. Features apply to every store on the plan at once; prices apply to new subscriptions (stores already on the plan keep their stored price until their subscription is saved again). Deactivate a plan (`isActive: false`) to stop offering it.
+         */
+        patch: operations["superAdminUpdatePlan"];
+        trace?: never;
+    };
+    "/api/superadmin/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List features
+         * @description The features a plan can include, with their type (on/off or a limit), label, description and default.
+         */
+        get: operations["superAdminListFeatures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List payments
+         * @description Payments from every store (or one, with `tenantId`), with each store’s current price for comparison. Search the store’s name, slug or owner email, the reference, or an amount in rupees ("4999"). Filtered to `SUBMITTED`, the oldest come first (the queue to check); otherwise the newest.
+         */
+        get: operations["superAdminListPayments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/payments/{id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open a payment’s receipt
+         * @description A link to the receipt the owner uploaded (private storage), valid for 10 minutes.
+         */
+        get: operations["superAdminGetPaymentReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/payments/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a payment
+         * @description The payment pays for the next billing cycle: from the current due date (paying early, or during the grace period), or from today for the first payment and for a store suspended after its period ran out. The store becomes ACTIVE (from SETUP, PAST_DUE or SUSPENDED), its storefronts are refreshed, and the owner is emailed. Optionally correct the amount received. Recorded in the audit log.
+         */
+        post: operations["superAdminConfirmPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/payments/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reject a payment
+         * @description The payment doesn’t count. The owner is emailed the reason and can send another. Recorded in the audit log.
+         */
+        post: operations["superAdminRejectPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get platform settings
+         * @description Billing settings: the notification email, WhatsApp number and bank accounts owners pay into, reminder and grace days; and whether this server sends email.
+         */
+        get: operations["superAdminGetSettings"];
+        /**
+         * Update platform settings
+         * @description Replace the billing settings. Bank accounts and the WhatsApp number appear on every store’s Billing page and in billing emails. Recorded in the audit log.
+         */
+        put: operations["superAdminUpdateSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/billing/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run billing now
+         * @description The daily billing run, now (it also runs every day by itself on production). For each store with a paid period: a "payment due" reminder within the reminder days; on the due date the store becomes PAST_DUE (still live) and gets a "due today" email, then an "overdue" email each grace day; after the grace days it is SUSPENDED and the owner and the notification email are told. Free subscriptions move on to their next period. Then a digest goes to the notification email (when there is something in it). Stores in SETUP and suspended stores are left alone. Every step is idempotent: emails go out once each, so running it again the same day does nothing more.
+         */
+        post: operations["superAdminRunBilling"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/internal/billing/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Daily billing run
+         * @description Called once a day by Vercel Cron (`crons` in vercel.json, production only) with `Authorization: Bearer <CRON_SECRET>`. For each store with a paid period: a "payment due" reminder within the reminder days; on the due date the store becomes PAST_DUE (still live) and gets a "due today" email, then an "overdue" email each grace day; after the grace days it is SUSPENDED and the owner and the notification email are told. Free subscriptions move on to their next period. Then a digest goes to the notification email (when there is something in it). Stores in SETUP and suspended stores are left alone. Every step is idempotent: emails go out once each, so running it again the same day does nothing more. The same run is available to superadmins as `POST /api/superadmin/billing/run`.
+         */
+        get: operations["internalRunBilling"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1915,6 +2303,34 @@ export interface components {
             footer: string;
             /** @example #111111 */
             footerForeground: string;
+        };
+        /** @description Only the features listed; a key left out isn’t changed (plan default, or no override). */
+        FeatureOverrides: {
+            /** @description Products can be sold as decants (vials poured from the bottle) as well as full sizes. */
+            decants?: boolean;
+            /** @description Shoppers can pay by direct bank transfer as well as cash on delivery. */
+            bankTransfer?: boolean;
+            /** @description Shoppers paying by bank transfer can upload their receipt on the order page. */
+            receiptUpload?: boolean;
+            /** @description The slider at the top of the homepage. */
+            heroSlider?: boolean;
+            /**
+             * @description Staff users besides the owner (disabled ones don’t count). Empty means unlimited.
+             * @example 3
+             */
+            staffAccounts?: number | null;
+            /**
+             * @description Products in the catalogue (archived ones don’t count). Empty means unlimited.
+             * @example 200
+             */
+            maxProducts?: number | null;
+            /**
+             * @description Domains the storefront can be served from. Empty means unlimited.
+             * @example 2
+             */
+            customDomains?: number | null;
+            /** @description Sales charts and reports in the store admin. */
+            analytics?: boolean;
         };
         /** @description Everything the storefront needs before it renders: store identity, status and theme. */
         StoreConfig: {
@@ -2479,9 +2895,58 @@ export interface components {
                 name: string;
                 /** @example acme */
                 slug: string;
-                /** @enum {string} */
-                status: "SETUP" | "ACTIVE" | "SUSPENDED";
+                /**
+                 * @description PAST_DUE: live, but the subscription is overdue. SUSPENDED: only Billing works until the payment is confirmed.
+                 * @enum {string}
+                 */
+                status: "SETUP" | "ACTIVE" | "PAST_DUE" | "SUSPENDED";
+                /** @description What the store’s plan includes, to hide or explain what it doesn’t */
+                features: components["schemas"]["Features"];
+                /** @description Where the store stands with its subscription, for a banner */
+                billing: components["schemas"]["StoreBillingStatus"];
             };
+        };
+        /** @description What a plan includes. Numeric limits: null means unlimited. */
+        Features: {
+            /** @description Products can be sold as decants (vials poured from the bottle) as well as full sizes. */
+            decants: boolean;
+            /** @description Shoppers can pay by direct bank transfer as well as cash on delivery. */
+            bankTransfer: boolean;
+            /** @description Shoppers paying by bank transfer can upload their receipt on the order page. */
+            receiptUpload: boolean;
+            /** @description The slider at the top of the homepage. */
+            heroSlider: boolean;
+            /**
+             * @description Staff users besides the owner (disabled ones don’t count). Empty means unlimited.
+             * @example 3
+             */
+            staffAccounts: number | null;
+            /**
+             * @description Products in the catalogue (archived ones don’t count). Empty means unlimited.
+             * @example 200
+             */
+            maxProducts: number | null;
+            /**
+             * @description Domains the storefront can be served from. Empty means unlimited.
+             * @example 2
+             */
+            customDomains: number | null;
+            /** @description Sales charts and reports in the store admin. */
+            analytics: boolean;
+        };
+        StoreBillingStatus: {
+            /**
+             * @description UNBILLED: no subscription (not billed, every feature). AWAITING_PAYMENT: subscribed, first payment not confirmed yet. PAID: paid until the due date. DUE_SOON: the due date is within the reminder days. OVERDUE: past the due date, in the grace period (store PAST_DUE). SUSPENDED: suspended after the grace period.
+             * @enum {string}
+             */
+            state: "UNBILLED" | "AWAITING_PAYMENT" | "PAID" | "DUE_SOON" | "OVERDUE" | "SUSPENDED";
+            dueDate: string | null;
+            /**
+             * @description Negative when overdue; null without a due date
+             * @example 12
+             */
+            daysUntilDue: number | null;
+            graceEndsOn: string | null;
         };
         /** @description The columns the product CSV import understands */
         ProductImportFormat: {
@@ -2786,6 +3251,11 @@ export interface components {
             url: string;
             /** Format: date-time */
             expiresAt: string;
+            /**
+             * @description The link was also emailed here; null when email isn’t set up or failed (send it yourself)
+             * @example bilal@acme.com
+             */
+            emailedTo: string | null;
         };
         PermissionInfo: {
             key: components["schemas"]["Permission"];
@@ -3202,6 +3672,115 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @description The store’s plan, when it’s due, and how to pay */
+        StoreBilling: {
+            /** @description Null: the store has no subscription (not billed) */
+            plan: {
+                /** @example Growth */
+                name: string;
+                description: string | null;
+                /**
+                 * @description How often the store pays: every month or every year
+                 * @enum {string}
+                 */
+                billingCycle: "MONTHLY" | "YEARLY";
+                /**
+                 * @description What the store pays per cycle, minor units (paisa)
+                 * @example 499900
+                 */
+                price: number;
+            } | null;
+            /**
+             * @description UNBILLED: no subscription (not billed, every feature). AWAITING_PAYMENT: subscribed, first payment not confirmed yet. PAID: paid until the due date. DUE_SOON: the due date is within the reminder days. OVERDUE: past the due date, in the grace period (store PAST_DUE). SUSPENDED: suspended after the grace period.
+             * @enum {string}
+             */
+            state: "UNBILLED" | "AWAITING_PAYMENT" | "PAID" | "DUE_SOON" | "OVERDUE" | "SUSPENDED";
+            dueDate: string | null;
+            /**
+             * @description Negative when overdue; null without a due date
+             * @example 12
+             */
+            daysUntilDue: number | null;
+            graceEndsOn: string | null;
+            /** @description What the store’s plan includes */
+            features: {
+                /** @example staffAccounts */
+                key: string;
+                /** @example Staff accounts */
+                label: string;
+                description: string;
+                /** @description On/off, or a limit (null: unlimited) */
+                value: boolean | number | null;
+            }[];
+            payTo: {
+                bankAccounts: {
+                    /** @example Meezan Bank */
+                    bankName: string;
+                    /** @example The Scent System */
+                    accountTitle: string;
+                    /** @example 0123 4567 8901 */
+                    accountNumber: string;
+                    /** @example PK36MEZN0001234567890123 */
+                    iban: string | null;
+                }[];
+                /** @description Where to send the payment screenshot instead of uploading it */
+                whatsappNumber: string | null;
+                whatsappUrl: string | null;
+            };
+            /** @description Whether a receipt can be uploaded here (otherwise send it on WhatsApp) */
+            receiptUploads: boolean;
+            /** @description A payment is waiting to be checked; another can’t be sent until then */
+            paymentPending: boolean;
+        };
+        StorePaymentList: {
+            items: components["schemas"]["StorePayment"][];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        /** @description A payment the store made for its subscription */
+        StorePayment: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description Minor units (paisa)
+             * @example 499900
+             */
+            amount: number;
+            /** @enum {string} */
+            method: "BANK_TRANSFER" | "CASH" | "OTHER";
+            /** @example FT26304XYZ */
+            reference: string | null;
+            note: string | null;
+            /** @description A receipt was uploaded (open it through …/receipt) */
+            hasReceipt: boolean;
+            /**
+             * @description OWNER: sent from the store’s Billing page. PLATFORM: recorded in the console.
+             * @enum {string}
+             */
+            source: "OWNER" | "PLATFORM";
+            /**
+             * @description SUBMITTED: waiting to be checked. CONFIRMED: extended the subscription by one cycle. REJECTED: not accepted.
+             * @enum {string}
+             */
+            status: "SUBMITTED" | "CONFIRMED" | "REJECTED";
+            periodStart: string | null;
+            periodEnd: string | null;
+            /** Format: date-time */
+            submittedAt: string;
+            reviewedAt: string | null;
+            /** @description The platform’s note, e.g. why it was rejected */
+            reviewNote: string | null;
+        };
+        BillingReceiptUpload: {
+            /** @description PUT the file here from the browser. Valid for 2 hours, once. */
+            uploadUrl: string;
+            /**
+             * @description Send it as `receiptPath` with the payment
+             * @example platform/acme/billing/4c3f0f2e-8a8b-4b8e-9f43-3f5d1f1c2b7a.jpg
+             */
+            path: string;
+        };
         SuperAdminSession: {
             /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
             token: string;
@@ -3237,14 +3816,26 @@ export interface components {
             /** @example acme */
             slug: string;
             /**
-             * @description PROVISIONING: schema being created. SETUP: admin only, storefront "Opening soon". ACTIVE: live. SUSPENDED: storefront unavailable.
+             * @description PROVISIONING: schema being created. SETUP: admin only, storefront "Opening soon". ACTIVE: live. PAST_DUE: live, but the subscription is overdue (grace period). SUSPENDED: storefront unavailable, admin limited to Billing.
              * @enum {string}
              */
-            status: "PROVISIONING" | "SETUP" | "ACTIVE" | "SUSPENDED";
+            status: "PROVISIONING" | "SETUP" | "ACTIVE" | "PAST_DUE" | "SUSPENDED";
             /** @example acme.com */
             primaryDomain: string | null;
             ownerName: string | null;
             ownerEmail: string | null;
+            /** @description Null: not billed */
+            plan: {
+                /** Format: uuid */
+                id: string;
+                /** @example Growth */
+                name: string;
+            } | null;
+            /**
+             * @description The due date; null before the first payment or without a subscription
+             * @example 2026-11-04
+             */
+            paidUntil: string | null;
             /** Format: date-time */
             createdAt: string;
         };
@@ -3258,10 +3849,10 @@ export interface components {
             /** @example acme_schema */
             schemaName: string;
             /**
-             * @description PROVISIONING: schema being created. SETUP: admin only, storefront "Opening soon". ACTIVE: live. SUSPENDED: storefront unavailable.
+             * @description PROVISIONING: schema being created. SETUP: admin only, storefront "Opening soon". ACTIVE: live. PAST_DUE: live, but the subscription is overdue (grace period). SUSPENDED: storefront unavailable, admin limited to Billing.
              * @enum {string}
              */
-            status: "PROVISIONING" | "SETUP" | "ACTIVE" | "SUSPENDED";
+            status: "PROVISIONING" | "SETUP" | "ACTIVE" | "PAST_DUE" | "SUSPENDED";
             /** @description Why the status last changed, e.g. a suspension reason */
             statusReason: string | null;
             statusChangedAt: string | null;
@@ -3303,6 +3894,11 @@ export interface components {
             url: string;
             /** Format: date-time */
             expiresAt: string;
+            /**
+             * @description The link was also emailed here; null when email isn’t set up or failed (send it yourself)
+             * @example owner@acme.com
+             */
+            emailedTo: string | null;
         };
         AdminAccessLink: {
             /**
@@ -3313,6 +3909,127 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        /** @description A store’s subscription, where it stands, and its features */
+        TenantBilling: {
+            /** @description Null: the store isn’t billed and gets every feature */
+            subscription: components["schemas"]["Subscription"] | null;
+            /**
+             * @description UNBILLED: no subscription (not billed, every feature). AWAITING_PAYMENT: subscribed, first payment not confirmed yet. PAID: paid until the due date. DUE_SOON: the due date is within the reminder days. OVERDUE: past the due date, in the grace period (store PAST_DUE). SUSPENDED: suspended after the grace period.
+             * @enum {string}
+             */
+            state: "UNBILLED" | "AWAITING_PAYMENT" | "PAID" | "DUE_SOON" | "OVERDUE" | "SUSPENDED";
+            dueDate: string | null;
+            /**
+             * @description Negative when overdue; null without a due date
+             * @example 12
+             */
+            daysUntilDue: number | null;
+            graceEndsOn: string | null;
+            features: {
+                /** @description The plan’s features; null without a subscription */
+                plan: components["schemas"]["Features"] | null;
+                overrides: components["schemas"]["FeatureOverridesOutput"];
+                /** @description What the store gets: the plan’s features (or every feature) with the overrides on top */
+                effective: components["schemas"]["Features"];
+            };
+            /**
+             * @description SUBMITTED payments from this store
+             * @example 1
+             */
+            paymentsToReview: number;
+        };
+        Subscription: {
+            /** Format: uuid */
+            id: string;
+            plan: {
+                /** Format: uuid */
+                id: string;
+                /** @example Growth */
+                name: string;
+                isActive: boolean;
+            };
+            /**
+             * @description How often the store pays: every month or every year
+             * @enum {string}
+             */
+            billingCycle: "MONTHLY" | "YEARLY";
+            /**
+             * @description PLAN: the plan’s price. PERCENT_OFF: the plan’s price less `pricingValue` percent, to whole rupees. AMOUNT_OFF: the plan’s price less `pricingValue` paisa. CUSTOM: `pricingValue` paisa.
+             * @enum {string}
+             */
+            pricingMode: "PLAN" | "PERCENT_OFF" | "AMOUNT_OFF" | "CUSTOM";
+            pricingValue: number | null;
+            /**
+             * @description What the store pays per cycle, minor units (paisa)
+             * @example 399900
+             */
+            price: number;
+            /**
+             * @description The plan’s current price for this cycle, minor units (paisa)
+             * @example 499900
+             */
+            planPrice: number;
+            currentPeriodStart: string | null;
+            currentPeriodEnd: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description A store’s payment for its subscription */
+        BillingPayment: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description Minor units (paisa)
+             * @example 499900
+             */
+            amount: number;
+            /** @enum {string} */
+            method: "BANK_TRANSFER" | "CASH" | "OTHER";
+            /** @example FT26304XYZ */
+            reference: string | null;
+            note: string | null;
+            /** @description A receipt was uploaded (open it through …/receipt) */
+            hasReceipt: boolean;
+            /**
+             * @description OWNER: sent from the store’s Billing page. PLATFORM: recorded in the console.
+             * @enum {string}
+             */
+            source: "OWNER" | "PLATFORM";
+            /**
+             * @description SUBMITTED: waiting to be checked. CONFIRMED: extended the subscription by one cycle. REJECTED: not accepted.
+             * @enum {string}
+             */
+            status: "SUBMITTED" | "CONFIRMED" | "REJECTED";
+            periodStart: string | null;
+            periodEnd: string | null;
+            /** Format: date-time */
+            submittedAt: string;
+            reviewedAt: string | null;
+            /** @description The platform’s note, e.g. why it was rejected */
+            reviewNote: string | null;
+            tenant: {
+                /** Format: uuid */
+                id: string;
+                /** @example Acme Perfumes */
+                name: string;
+                /** @example acme */
+                slug: string;
+                /** @enum {string} */
+                status: "PROVISIONING" | "SETUP" | "ACTIVE" | "PAST_DUE" | "SUSPENDED";
+            };
+            /**
+             * @description The store’s price per cycle now, minor units (paisa)
+             * @example 499900
+             */
+            expectedAmount: number | null;
+            reviewedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+        };
         ThemePreset: {
             /** @enum {string} */
             key: "palette" | "noir" | "rose" | "amber" | "aqua";
@@ -3320,6 +4037,133 @@ export interface components {
             name: string;
             description: string;
             theme: components["schemas"]["ThemeOutput"];
+        };
+        /** @description A subscription plan: prices and features. Price changes apply to new subscriptions. */
+        Plan: {
+            /** Format: uuid */
+            id: string;
+            /** @example Growth */
+            name: string;
+            description: string | null;
+            /**
+             * @description Minor units (paisa) per month
+             * @example 499900
+             */
+            priceMonthly: number;
+            /**
+             * @description Minor units (paisa) per year
+             * @example 4999000
+             */
+            priceYearly: number;
+            features: components["schemas"]["Features"];
+            isActive: boolean;
+            /**
+             * @description Stores on this plan
+             * @example 3
+             */
+            subscriberCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        FeatureInfo: {
+            /**
+             * @example staffAccounts
+             * @enum {string}
+             */
+            key: "decants" | "bankTransfer" | "receiptUpload" | "heroSlider" | "staffAccounts" | "maxProducts" | "customDomains" | "analytics";
+            /**
+             * @description boolean: on or off. number: a limit, where null means unlimited.
+             * @enum {string}
+             */
+            type: "boolean" | "number";
+            /** @example Staff accounts */
+            label: string;
+            description: string;
+            /** @description What a plan gets when it leaves the feature out */
+            default: boolean | number | null;
+        };
+        BillingPaymentList: {
+            items: components["schemas"]["BillingPayment"][];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        ReceiptLink: {
+            /** @description Opens the receipt; valid for 10 minutes */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        PlatformSettings: {
+            notificationEmail: string | null;
+            whatsappNumber: string | null;
+            bankAccounts: {
+                /** @example Meezan Bank */
+                bankName: string;
+                /** @example The Scent System */
+                accountTitle: string;
+                /** @example 0123 4567 8901 */
+                accountNumber: string;
+                /** @example PK36MEZN0001234567890123 */
+                iban: string | null;
+            }[];
+            reminderDaysBefore: number;
+            graceDays: number;
+            /** @description Whether this server sends email (RESEND_API_KEY is set); otherwise emails are only logged */
+            emailEnabled: boolean;
+            /**
+             * @description When the daily billing job runs (Vercel Cron, production only); run it any time with POST /api/superadmin/billing/run
+             * @example Daily at 09:00 Pakistan time
+             */
+            billingJobSchedule: string;
+        };
+        /** @description What a billing run did. Every step is idempotent: running it twice the same day does nothing more. */
+        BillingRun: {
+            /**
+             * Format: date
+             * @description The day the run counted as today (Pakistan time)
+             * @example 2026-11-04
+             */
+            date: string;
+            /**
+             * @description Stores with a paid period that were checked
+             * @example 12
+             */
+            stores: number;
+            /**
+             * @description "Payment due soon" emails sent
+             * @example 2
+             */
+            reminders: number;
+            /**
+             * @description Stores that became PAST_DUE
+             * @example 1
+             */
+            markedPastDue: number;
+            /**
+             * @description "Payment due" and "overdue" emails sent
+             * @example 1
+             */
+            overdueNotices: number;
+            /**
+             * @description Stores suspended after the grace period
+             * @example 0
+             */
+            suspended: number;
+            /**
+             * @description Free subscriptions (price 0) moved to their next period
+             * @example 0
+             */
+            renewedFree: number;
+            /** @description Whether the digest went to the notification email */
+            digestSent: boolean;
+            /**
+             * @description Emails the email service refused; the next run retries them
+             * @example 0
+             */
+            emailsFailed: number;
         };
         /** @description Storefront design tokens. Set per tenant by the superadmin. */
         ThemeOutput: {
@@ -3441,6 +4285,34 @@ export interface components {
             footer: string;
             /** @example #111111 */
             footerForeground: string;
+        };
+        /** @description Only the features listed; a key left out isn’t changed (plan default, or no override). */
+        FeatureOverridesOutput: {
+            /** @description Products can be sold as decants (vials poured from the bottle) as well as full sizes. */
+            decants?: boolean;
+            /** @description Shoppers can pay by direct bank transfer as well as cash on delivery. */
+            bankTransfer?: boolean;
+            /** @description Shoppers paying by bank transfer can upload their receipt on the order page. */
+            receiptUpload?: boolean;
+            /** @description The slider at the top of the homepage. */
+            heroSlider?: boolean;
+            /**
+             * @description Staff users besides the owner (disabled ones don’t count). Empty means unlimited.
+             * @example 3
+             */
+            staffAccounts?: number | null;
+            /**
+             * @description Products in the catalogue (archived ones don’t count). Empty means unlimited.
+             * @example 200
+             */
+            maxProducts?: number | null;
+            /**
+             * @description Domains the storefront can be served from. Empty means unlimited.
+             * @example 2
+             */
+            customDomains?: number | null;
+            /** @description Sales charts and reports in the store admin. */
+            analytics?: boolean;
         };
     };
     responses: {
@@ -3572,7 +4444,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            /** @description Collection not found, or no live (ACTIVE) store serves the calling domain. */
+            /** @description Collection not found, or no live store (ACTIVE, or PAST_DUE in its grace period) serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3613,7 +4485,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            /** @description Collection not found, or no live (ACTIVE) store serves the calling domain. */
+            /** @description Collection not found, or no live store (ACTIVE, or PAST_DUE in its grace period) serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3728,7 +4600,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            /** @description Store not found: no live store (ACTIVE, or PAST_DUE in its grace period) serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3836,7 +4708,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            /** @description Store not found: no live store (ACTIVE, or PAST_DUE in its grace period) serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -3964,7 +4836,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            /** @description Store not found: no live store (ACTIVE, or PAST_DUE in its grace period) serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4015,7 +4887,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            /** @description Store not found: no live store (ACTIVE, or PAST_DUE in its grace period) serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4100,7 +4972,7 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            /** @description Store not found: no live (ACTIVE) store serves the calling domain. */
+            /** @description Store not found: no live store (ACTIVE, or PAST_DUE in its grace period) serves the calling domain. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4214,6 +5086,15 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            /** @description The store’s plan doesn’t include receipt uploads: send the receipt on WhatsApp. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description No order with this number and token in this store, or store not found. */
             404: {
                 headers: {
@@ -4301,6 +5182,15 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            /** @description The store’s plan doesn’t include receipt uploads: send the receipt on WhatsApp. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description No order with this number and token in this store, or store not found. */
             404: {
                 headers: {
@@ -4576,7 +5466,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Import products from CSV" (`products.import`). */
+            /** @description The user's role doesn't include "Import products from CSV" (`products.import`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4629,7 +5519,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Import products from CSV" (`products.import`). */
+            /** @description The user's role doesn't include "Import products from CSV" (`products.import`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4681,7 +5571,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Import products from CSV" (`products.import`). */
+            /** @description The user's role doesn't include "Import products from CSV" (`products.import`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4739,7 +5629,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4872,7 +5762,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Add products" (`products.create`). */
+            /** @description The user's role doesn't include "Add products" (`products.create`), or the store's plan doesn't allow decants, or another product (its product limit). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4930,7 +5820,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5066,7 +5956,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit products" (`products.edit`). */
+            /** @description The user's role doesn't include "Edit products" (`products.edit`), or the store's plan doesn't allow turning decants on, or restoring an archived product past its product limit. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5120,7 +6010,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Archive and delete products" (`products.delete`). */
+            /** @description The user's role doesn't include "Archive and delete products" (`products.delete`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5178,7 +6068,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5232,7 +6122,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). */
+            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5298,7 +6188,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). */
+            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5352,7 +6242,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). */
+            /** @description The user's role doesn't include "Manage brands" (`brands.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5410,7 +6300,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5465,7 +6355,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). */
+            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5532,7 +6422,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). */
+            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5586,7 +6476,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). */
+            /** @description The user's role doesn't include "Manage notes" (`notes.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5640,7 +6530,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5685,7 +6575,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5750,7 +6640,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). */
+            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5808,7 +6698,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). */
+            /** @description The user's role doesn't include "View the catalogue" (`catalog.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5876,7 +6766,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). */
+            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5930,7 +6820,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). */
+            /** @description The user's role doesn't include "Manage collections" (`collections.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5975,6 +6865,15 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            /** @description The store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Store not found: no reachable store serves the calling domain. */
             404: {
                 headers: {
@@ -6032,7 +6931,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't allow uploading this kind of image. */
+            /** @description The user's role doesn't allow uploading this kind of image. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6095,7 +6994,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6156,7 +7055,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this, or the store’s plan allows no more staff accounts. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6228,7 +7127,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this, or the target is the owner (the owner's account is managed by the platform). */
+            /** @description Only the store owner can do this, or the target is the owner (the owner's account is managed by the platform), or enabling them would go past the plan’s staff accounts. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6277,7 +7176,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this, or the target is the owner (the owner's account is managed by the platform). */
+            /** @description Only the store owner can do this, or the target is the owner (the owner's account is managed by the platform), or enabling them would go past the plan’s staff accounts. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6331,6 +7230,15 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            /** @description The store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Store not found: no reachable store serves the calling domain. */
             404: {
                 headers: {
@@ -6367,7 +7275,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6424,7 +7332,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6493,7 +7401,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6547,7 +7455,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6601,7 +7509,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6706,7 +7614,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6751,7 +7659,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6831,7 +7739,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`), or the store's plan doesn't allow the homepage slider (saving an empty slider always works). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -6876,7 +7784,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7039,7 +7947,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7084,7 +7992,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7151,7 +8059,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7209,7 +8117,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7279,7 +8187,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7333,7 +8241,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7380,7 +8288,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store content" (`content.manage`). */
+            /** @description The user's role doesn't include "Edit store content" (`content.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7425,7 +8333,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). */
+            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7506,7 +8414,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). */
+            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7557,7 +8465,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Newsletter sign-ups" (`newsletter.manage`). */
+            /** @description The user's role doesn't include "Newsletter sign-ups" (`newsletter.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7602,7 +8510,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Newsletter sign-ups" (`newsletter.manage`). */
+            /** @description The user's role doesn't include "Newsletter sign-ups" (`newsletter.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7647,7 +8555,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). */
+            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7715,7 +8623,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Edit store details" (`settings.manage`). */
+            /** @description The user's role doesn't include "Edit store details" (`settings.manage`), or the store's plan doesn't allow turning bank transfer on. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7760,7 +8668,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7827,7 +8735,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description Only the store owner can do this. */
+            /** @description Only the store owner can do this. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7881,7 +8789,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View orders" (`orders.view`). */
+            /** @description The user's role doesn't include "View orders" (`orders.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -7930,7 +8838,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "View orders" (`orders.view`). */
+            /** @description The user's role doesn't include "View orders" (`orders.view`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -8006,7 +8914,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Process orders" (`orders.manage`). */
+            /** @description The user's role doesn't include "Process orders" (`orders.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -8075,7 +8983,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Process orders" (`orders.manage`). */
+            /** @description The user's role doesn't include "Process orders" (`orders.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -8140,7 +9048,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
-            /** @description The user's role doesn't include "Process orders" (`orders.manage`). */
+            /** @description The user's role doesn't include "Process orders" (`orders.manage`). Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -8159,6 +9067,282 @@ export interface operations {
                 };
             };
             500: components["responses"]["InternalError"];
+        };
+    };
+    adminGetBilling: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The store’s billing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StoreBilling"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminListBillingPayments: {
+        parameters: {
+            query?: {
+                status?: "SUBMITTED" | "CONFIRMED" | "REJECTED";
+                page?: number;
+                pageSize?: number;
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of payments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorePaymentList"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    adminSubmitBillingPayment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description The amount paid, in minor units (paisa)
+                     * @example 499900
+                     */
+                    amount: number;
+                    /**
+                     * @description Bank reference or transaction ID
+                     * @example FT26304XYZ
+                     */
+                    reference?: string | null;
+                    /** @example Paid from our Meezan account */
+                    note?: string | null;
+                    /**
+                     * @description The `path` from POST /api/admin/billing/receipt-upload, after uploading the file
+                     * @example platform/acme/billing/4c3f0f2e-8a8b-4b8e-9f43-3f5d1f1c2b7a.jpg
+                     */
+                    receiptPath?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The payment, waiting to be checked */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorePayment"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store has no subscription, or a payment is already waiting to be checked. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description File storage couldn’t be reached to check the receipt. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Receipt storage isn’t set up on this server. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    adminCreateBillingReceiptUpload: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description A screenshot or photo of the payment receipt
+                     * @example image/jpeg
+                     * @enum {string}
+                     */
+                    contentType: "image/jpeg" | "image/png" | "image/webp";
+                    /** @example 248133 */
+                    size: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Where to upload */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingReceiptUpload"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Only the store owner can do this. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store has no subscription to pay for. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description File storage couldn’t be reached. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Receipt uploads aren’t available on this server (send the receipt on WhatsApp instead). */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     superAdminLogin: {
@@ -8234,9 +9418,13 @@ export interface operations {
     superAdminListTenants: {
         parameters: {
             query?: {
-                status?: "PROVISIONING" | "SETUP" | "ACTIVE" | "SUSPENDED";
+                status?: "PROVISIONING" | "SETUP" | "ACTIVE" | "PAST_DUE" | "SUSPENDED";
                 /** @description Search name, slug, domain or owner email */
                 q?: string;
+                /** @description Only stores on this plan */
+                planId?: string;
+                /** @description unbilled: no subscription. awaiting_payment: subscribed, first payment not confirmed. due_soon: due within the reminder days. overdue: past the due date and not suspended. */
+                billing?: "unbilled" | "awaiting_payment" | "due_soon" | "overdue";
                 page?: number;
                 pageSize?: number;
             };
@@ -8295,6 +9483,30 @@ export interface operations {
                      * @enum {string}
                      */
                     themePreset?: "palette" | "noir" | "rose" | "amber" | "aqua";
+                    /** @description Its plan and pricing. Left out: the store isn’t billed (set it up later). Its first payment starts the first period. */
+                    subscription?: {
+                        /**
+                         * Format: uuid
+                         * @description An active plan (the current plan may stay even if it was deactivated)
+                         */
+                        planId: string;
+                        /**
+                         * @description How often the store pays: every month or every year
+                         * @enum {string}
+                         */
+                        billingCycle: "MONTHLY" | "YEARLY";
+                        /**
+                         * @description PLAN: the plan’s price. PERCENT_OFF: the plan’s price less `pricingValue` percent, to whole rupees. AMOUNT_OFF: the plan’s price less `pricingValue` paisa. CUSTOM: `pricingValue` paisa.
+                         * @default PLAN
+                         * @enum {string}
+                         */
+                        pricingMode?: "PLAN" | "PERCENT_OFF" | "AMOUNT_OFF" | "CUSTOM";
+                        /**
+                         * @description PERCENT_OFF: 1–100. AMOUNT_OFF and CUSTOM: minor units (paisa). PLAN: leave out.
+                         * @example 20
+                         */
+                        pricingValue?: number | null;
+                    };
                 };
             };
         };
@@ -8644,7 +9856,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description The domain is already used by another store. */
+            /** @description The domain is already used by another store, or the store’s plan allows no more domains. */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -8835,6 +10047,277 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    superAdminGetTenantBilling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The store’s billing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantBilling"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminSetSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: uuid
+                     * @description An active plan (the current plan may stay even if it was deactivated)
+                     */
+                    planId: string;
+                    /**
+                     * @description How often the store pays: every month or every year
+                     * @enum {string}
+                     */
+                    billingCycle: "MONTHLY" | "YEARLY";
+                    /**
+                     * @description PLAN: the plan’s price. PERCENT_OFF: the plan’s price less `pricingValue` percent, to whole rupees. AMOUNT_OFF: the plan’s price less `pricingValue` paisa. CUSTOM: `pricingValue` paisa.
+                     * @default PLAN
+                     * @enum {string}
+                     */
+                    pricingMode?: "PLAN" | "PERCENT_OFF" | "AMOUNT_OFF" | "CUSTOM";
+                    /**
+                     * @description PERCENT_OFF: 1–100. AMOUNT_OFF and CUSTOM: minor units (paisa). PLAN: leave out.
+                     * @example 20
+                     */
+                    pricingValue?: number | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The store’s billing, updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantBilling"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminSetPeriodEnd: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: date
+                     * @description The new due date
+                     * @example 2026-11-04
+                     */
+                    periodEnd: string;
+                    /**
+                     * @description Shown in the audit log
+                     * @example Two weeks free for the Eid sale
+                     */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The store’s billing, updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantBilling"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store has no subscription. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminSetFeatureOverrides: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description The store’s overrides; replaces them all. {} removes every override. */
+                    overrides: components["schemas"]["FeatureOverrides"];
+                };
+            };
+        };
+        responses: {
+            /** @description The store’s billing, with its features updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TenantBilling"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminRecordPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Tenant ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description The amount received, in minor units (paisa)
+                     * @example 499900
+                     */
+                    amount: number;
+                    /**
+                     * @default BANK_TRANSFER
+                     * @enum {string}
+                     */
+                    method?: "BANK_TRANSFER" | "CASH" | "OTHER";
+                    /** @example FT26304XYZ */
+                    reference?: string | null;
+                    /** @example Receipt sent on WhatsApp */
+                    note?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The payment, confirmed */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingPayment"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tenant not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The store has no subscription. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
     superAdminListThemePresets: {
         parameters: {
             query?: never;
@@ -8856,6 +10339,617 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminListPlans: {
+        parameters: {
+            query?: {
+                /** @description Search plan names and descriptions */
+                q?: string;
+                /** @description Inactive plans can’t be chosen for a store */
+                status?: "active" | "inactive" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The plans */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Plan"][];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminCreatePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Growth */
+                    name: string;
+                    /** @example For stores with a growing catalogue and a small team. */
+                    description?: string | null;
+                    /**
+                     * @description Price per month, in minor units (paisa)
+                     * @example 499900
+                     */
+                    priceMonthly: number;
+                    /**
+                     * @description Price per year, in minor units (paisa)
+                     * @example 4999000
+                     */
+                    priceYearly: number;
+                    /**
+                     * @description Feature values; keys left out get the default (see GET /api/superadmin/features). Replaces all of the plan’s values.
+                     * @default {}
+                     */
+                    features?: components["schemas"]["FeatureOverrides"];
+                    /**
+                     * @description Inactive plans can’t be chosen for a store; stores on them keep them
+                     * @default true
+                     */
+                    isActive?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The plan */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Plan"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Another plan has this name. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Plan ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Plan"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Plan not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminDeletePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Plan ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Plan not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Stores are on this plan. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminUpdatePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Plan ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @example Growth */
+                    name?: string;
+                    /**
+                     * @description Null or empty: none
+                     * @example For stores with a growing catalogue and a small team.
+                     */
+                    description?: string | null;
+                    /**
+                     * @description Price per month, in minor units (paisa)
+                     * @example 499900
+                     */
+                    priceMonthly?: number;
+                    /**
+                     * @description Price per year, in minor units (paisa)
+                     * @example 4999000
+                     */
+                    priceYearly?: number;
+                    /** @description Feature values; keys left out get the default (see GET /api/superadmin/features). Replaces all of the plan’s values. */
+                    features?: components["schemas"]["FeatureOverrides"];
+                    /** @description Inactive plans can’t be chosen for a store; stores on them keep them */
+                    isActive?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The plan, updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Plan"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Plan not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Another plan has this name. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminListFeatures: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The feature catalogue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FeatureInfo"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminListPayments: {
+        parameters: {
+            query?: {
+                /** @description Search the store’s name, slug or owner email, the reference, or an amount in rupees */
+                q?: string;
+                status?: "SUBMITTED" | "CONFIRMED" | "REJECTED";
+                /** @description Only this store’s payments */
+                tenantId?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of payments */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingPaymentList"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetPaymentReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Payment ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The link */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReceiptLink"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Payment not found, no receipt was uploaded, or the file is missing. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+            /** @description File storage couldn’t be reached. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Receipt storage isn’t set up on this server. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    superAdminConfirmPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Payment ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description The amount actually received, if different from the one entered, in minor units (paisa)
+                     * @example 499900
+                     */
+                    amount?: number;
+                    /** @example Matched with the Meezan statement */
+                    note?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description The payment, confirmed, with the period it paid for */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingPayment"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Payment not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The payment was already confirmed or rejected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminRejectPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Payment ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Emailed to the owner
+                     * @example The receipt doesn’t match any transfer we received.
+                     */
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The payment, rejected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingPayment"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Payment not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The payment was already confirmed or rejected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformSettings"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminUpdateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Gets the daily digest and payment notices. Null: none are sent
+                     * @example billing@thescentsystem.store
+                     */
+                    notificationEmail?: string | null;
+                    /**
+                     * @description Owners can send payment screenshots here
+                     * @example +92 300 1234567
+                     */
+                    whatsappNumber?: string | null;
+                    /** @description The accounts stores pay into, in the order owners see them */
+                    bankAccounts: {
+                        /** @example Meezan Bank */
+                        bankName: string;
+                        /** @example Acme Perfumes */
+                        accountTitle: string;
+                        /** @example 0123 4567 8901 */
+                        accountNumber: string;
+                        /** @example PK36MEZN0001234567890123 */
+                        iban?: string | null;
+                    }[];
+                    /**
+                     * @description The "payment due" reminder goes out this many days before the due date
+                     * @example 3
+                     */
+                    reminderDaysBefore: number;
+                    /**
+                     * @description Days after the due date before an unpaid store is suspended
+                     * @example 2
+                     */
+                    graceDays: number;
+                };
+            };
+        };
+        responses: {
+            /** @description The settings, updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformSettings"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminRunBilling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What the run did */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingRun"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    internalRunBilling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description What the run did */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingRun"];
+                    };
+                };
+            };
+            /** @description Missing or wrong cron secret, or CRON_SECRET isn’t set on this server. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             500: components["responses"]["InternalError"];
         };
     };

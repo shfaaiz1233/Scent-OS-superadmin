@@ -4,7 +4,19 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type ActionResult, formValues, toActionError } from "@/lib/action-result";
 import { api } from "@/lib/api/server";
-import type { AdminAccessLink, OwnerInvite, TenantDetail, Theme } from "@/lib/api/types";
+import type {
+  AdminAccessLink,
+  BillingCycle,
+  BillingPayment,
+  FeatureOverrides,
+  OwnerInvite,
+  PaymentMethod,
+  PricingMode,
+  TenantBilling,
+  TenantDetail,
+  Theme,
+} from "@/lib/api/types";
+import { type SubscriptionInput, toSubscriptionInput } from "@/lib/pricing";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 
@@ -14,6 +26,16 @@ function refreshTenant(id: string) {
 }
 
 export async function createTenantAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  // Billing is optional: without a plan the store isn't billed (set it up later on its Billing tab).
+  const planId = text(formData, "planId");
+  const subscription = planId
+    ? toSubscriptionInput({
+        planId,
+        billingCycle: (text(formData, "billingCycle") || "MONTHLY") as BillingCycle,
+        pricingMode: (text(formData, "pricingMode") || "PLAN") as PricingMode,
+        pricingValue: text(formData, "pricingValue"),
+      })
+    : undefined;
   let tenant: TenantDetail;
   try {
     tenant = await api<TenantDetail>("/api/superadmin/tenants", {
@@ -30,6 +52,7 @@ export async function createTenantAction(_prev: ActionResult | null, formData: F
           .map((d) => d.trim())
           .filter(Boolean),
         themePreset: text(formData, "themePreset") || undefined,
+        subscription,
       },
     });
   } catch (err) {
@@ -144,6 +167,53 @@ export async function createOwnerInviteAction(id: string): Promise<ActionResult<
     const invite = await api<OwnerInvite>(`/api/superadmin/tenants/${id}/owner-invite`, { method: "POST" });
     refreshTenant(id);
     return { ok: true, data: invite };
+  } catch (err) {
+    return toActionError(err);
+  }
+}
+
+// Billing (the store page's Billing and Features tabs)
+
+export async function setSubscriptionAction(id: string, input: SubscriptionInput): Promise<ActionResult<TenantBilling>> {
+  try {
+    const billing = await api<TenantBilling>(`/api/superadmin/tenants/${id}/subscription`, { method: "PUT", body: input });
+    refreshTenant(id);
+    revalidatePath("/plans");
+    return { ok: true, data: billing };
+  } catch (err) {
+    return toActionError(err);
+  }
+}
+
+export async function setPeriodEndAction(id: string, periodEnd: string, reason: string): Promise<ActionResult<TenantBilling>> {
+  try {
+    const billing = await api<TenantBilling>(`/api/superadmin/tenants/${id}/subscription/period`, { method: "POST", body: { periodEnd, reason } });
+    refreshTenant(id);
+    return { ok: true, data: billing };
+  } catch (err) {
+    return toActionError(err);
+  }
+}
+
+export async function recordPaymentAction(
+  id: string,
+  input: { amount: number; method: PaymentMethod; reference: string | null; note: string | null },
+): Promise<ActionResult<BillingPayment>> {
+  try {
+    const payment = await api<BillingPayment>(`/api/superadmin/tenants/${id}/payments`, { method: "POST", body: input });
+    refreshTenant(id);
+    revalidatePath("/payments");
+    return { ok: true, data: payment };
+  } catch (err) {
+    return toActionError(err);
+  }
+}
+
+export async function setFeatureOverridesAction(id: string, overrides: FeatureOverrides): Promise<ActionResult<TenantBilling>> {
+  try {
+    const billing = await api<TenantBilling>(`/api/superadmin/tenants/${id}/features`, { method: "PUT", body: { overrides } });
+    refreshTenant(id);
+    return { ok: true, data: billing };
   } catch (err) {
     return toActionError(err);
   }

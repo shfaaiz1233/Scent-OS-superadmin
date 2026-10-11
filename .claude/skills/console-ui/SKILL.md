@@ -74,6 +74,12 @@ Text always says the status; colour is never the only signal.
 - **Money inputs** show "Rs" as a prefix, accept rupees, and are converted to minor units (×100) before sending.
 - **Submit buttons** show a pending state and disable while submitting.
 
+## Charts
+
+- shadcn `chart` (Recharts) through `PeriodChart` (`components/period-chart.tsx`): bars of money by day or month, with the count in the tooltip. Colours come from the `--chart-*` tokens (neutral in both themes), never raw colours.
+- Charts are client components: pass plain data and strings from the page, never functions.
+- The period is a `RangePicker` above the content (7 / 30 / 90 days, 12 months), kept in the URL like filters.
+
 ## Confirmations
 
 Use a dialog for every destructive or financial action: suspend, change price or plan, confirm or reject payment, delete. The body states exactly what happens and to whom, and the confirm button repeats the verb:

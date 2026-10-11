@@ -56,6 +56,13 @@ Without `--password`, a strong password is generated and printed once. Sessions 
 
 Every change is recorded in the audit log.
 
+## Overview and ledger
+
+- **Overview** (the home page): monthly recurring revenue (what live stores pay per month; yearly plans count ÷ 12), live stores, payments waiting to be checked, subscriptions due in the next 7 days, your earnings by month for the last year, stores by status (each links to the filtered list) and the stores that sold most in the last 30 days.
+- **Ledger → Your earnings:** the payments you confirmed, dated by confirmation: total, a chart by day or month and the list, for the last 7, 30 or 90 days or 12 months. Search by store, owner, bank reference or amount.
+- **Ledger → Store sales:** each store's delivered orders, refunds, net sales and share of the total, with a chart. An order counts on the day it was delivered; a refund comes off on the day it was made. Search by store name or slug.
+- Days are Pakistan calendar days, as for billing.
+
 ## Scripts
 
 | Command | What it does |
@@ -68,16 +75,16 @@ Every change is recorded in the audit log.
 
 ## Status
 
-Phase 0 (the console shell: sidebar, top bar, light and dark mode, a page for each section), Phases 1, 3 and 5 are done. Overview and Ledger are placeholders until Phase 6:
+Phase 0 (the console shell: sidebar, top bar, light and dark mode, a page for each section) and Phases 1, 3, 5 and 6 are done:
 
 | Phase | Adds |
 | --- | --- |
 | 1 ✅ | Sign-in, tenant creation with automatic schema provisioning, tenant details and domains, activate / suspend, owner set-password links, theme editor |
 | 3 ✅ | **Open store admin**: edit a store's content (slider, homepage sections, menus, footer, pages, settings) in its own admin, signed in as Platform |
 | 5 ✅ | Plans and features, subscriptions with per-tenant discounts or custom prices, feature overrides, payments (search, receipts, confirm/reject, record), due dates, platform settings and the billing run |
-| 6 | Analytics and ledgers |
+| 6 ✅ | Overview (MRR, stores by status, payments to verify, renewals, earnings chart, top stores) and Ledger (your earnings and store sales) |
 
-Orders (Phase 4) are handled in each store's own admin; the console gets the platform's sales figures with the ledgers (Phase 6).
+Orders (Phase 4) are handled in each store's own admin; the console sees their totals in the Overview and Ledger.
 
 The console runs on Vercel at `app.thescentsystem.store`; see [../Scent-OS/docs/deployment.md](../Scent-OS/docs/deployment.md).
 

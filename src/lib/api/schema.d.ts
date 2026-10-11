@@ -1470,6 +1470,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the sales dashboard
+         * @description Sales in the period (default: the last 30 days): revenue, orders, average order and units from delivered orders, dated by delivery (an order refunded since is under refunds instead), a series by day or month, sales by payment method, where the orders placed in the period are now, the 10 best-selling products, and offered sizes with 3 or fewer units left. Needs the plan’s sales dashboard (`analytics`).
+         *
+         *     The store comes from the calling domain (`X-Store-Domain`, else `Origin`, else `Host`); stores in SETUP, ACTIVE, PAST_DUE and SUSPENDED are reachable (404 `Store not found` otherwise). In a SUSPENDED store only sign-in and Billing work: everything else answers 403 until the store is active again.
+         */
+        get: operations["adminGetAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/superadmin/auth/login": {
         parameters: {
             query?: never;
@@ -2054,6 +2076,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/superadmin/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the overview
+         * @description The console’s home page: monthly recurring revenue (live stores’ subscriptions, yearly prices ÷ 12), stores by status, payments waiting to be checked, paid subscriptions due in the next 7 days, confirmed earnings by month for the last 12 months, and stores’ sales in the last 30 days with the top 5 stores. Sales come from the sales ledger: a delivered order counts on its delivery day, a refund comes off on its refund day. Days are calendar days in Pakistan time.
+         */
+        get: operations["superAdminGetOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/ledger/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get your earnings
+         * @description Subscription payments confirmed in the period (default: the last 12 months), dated by their confirmation: the total, a series by day or month, and the payments themselves, newest first, one page at a time. Search narrows all of it to matching stores (name, slug, owner email), a reference or an amount in rupees.
+         */
+        get: operations["superAdminGetEarningsLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/ledger/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get stores’ sales
+         * @description Every store’s sales in the period (default: the last 30 days), from the sales ledger: delivered orders on their delivery day, refunds of delivered orders on their refund day. Totals, a series by day or month, and each store with sales or refunds, most net sales first. Search narrows it all to stores by name or slug.
+         */
+        get: operations["superAdminGetSalesLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/internal/billing/run": {
         parameters: {
             query?: never;
@@ -2079,10 +2161,10 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
-         * @description featured: featured first, then newest. manual: the order chosen for a hand-picked collection. Prices sort on the lowest price shown (decant prices in the Decants collection).
+         * @description featured: featured first, then newest. best-selling: most units sold in delivered orders first (refunds taken off), then featured and newest. manual: the order chosen for a hand-picked collection. Prices sort on the lowest price shown (decant prices in the Decants collection).
          * @enum {string}
          */
-        CatalogSort: "featured" | "newest" | "price-asc" | "price-desc" | "name" | "manual";
+        CatalogSort: "featured" | "best-selling" | "newest" | "price-asc" | "price-desc" | "name" | "manual";
         /**
          * @description DRAFT: admin only. ACTIVE: on the storefront. ARCHIVED: hidden, kept for past orders.
          * @enum {string}
@@ -2182,7 +2264,12 @@ export interface components {
          * @description An action a role can allow (see `GET /api/admin/permissions`).
          * @enum {string}
          */
-        Permission: "catalog.view" | "products.create" | "products.edit" | "products.delete" | "products.import" | "brands.manage" | "notes.manage" | "collections.manage" | "content.manage" | "orders.view" | "orders.manage" | "settings.manage" | "newsletter.manage";
+        Permission: "catalog.view" | "products.create" | "products.edit" | "products.delete" | "products.import" | "brands.manage" | "notes.manage" | "collections.manage" | "content.manage" | "orders.view" | "orders.manage" | "analytics.view" | "settings.manage" | "newsletter.manage";
+        /**
+         * @description 7d, 30d, 90d: the last 7, 30 or 90 days including today, by day. 12m: this month and the 11 before it, by month. Days are calendar days in Pakistan time.
+         * @enum {string}
+         */
+        AnalyticsRange: "7d" | "30d" | "90d" | "12m";
         /** @description Storefront design tokens. Set per tenant by the superadmin. */
         Theme: {
             /**
@@ -3781,6 +3868,159 @@ export interface components {
              */
             path: string;
         };
+        /** @description The store’s sales dashboard. Sales count on the day the order was delivered; an order refunded since doesn’t count as a sale (it is under `refunds`). */
+        StoreAnalytics: {
+            window: components["schemas"]["AnalyticsWindow"];
+            sales: {
+                /**
+                 * @description Delivered orders’ totals (delivery fees included), not counting refunded ones, minor units (paisa)
+                 * @example 4391000
+                 */
+                revenue: number;
+                /**
+                 * @description Delivered orders, not counting refunded ones
+                 * @example 37
+                 */
+                orders: number;
+                /**
+                 * @description revenue ÷ orders (0 without orders), minor units (paisa)
+                 * @example 118676
+                 */
+                averageOrder: number;
+                /**
+                 * @description Items in them
+                 * @example 52
+                 */
+                units: number;
+            };
+            refunds: {
+                /**
+                 * @description Orders delivered in the period and refunded since, minor units (paisa)
+                 * @example 129000
+                 */
+                amount: number;
+                /**
+                 * @description How many
+                 * @example 1
+                 */
+                orders: number;
+            };
+            /** @description Revenue and orders by the day (or month) they were delivered */
+            series: {
+                /**
+                 * @description A day ("2026-10-11") or, for 12m, a month ("2026-10")
+                 * @example 2026-10-11
+                 */
+                period: string;
+                /**
+                 * @description Delivered, not refunded, minor units (paisa)
+                 * @example 129000
+                 */
+                revenue: number;
+                /**
+                 * @description Delivered orders
+                 * @example 1
+                 */
+                orders: number;
+            }[];
+            /** @description Delivered sales by payment method (methods without sales are left out) */
+            byPaymentMethod: {
+                /** @enum {string} */
+                method: "COD" | "BANK_TRANSFER";
+                /**
+                 * @description Delivered, not refunded, minor units (paisa)
+                 * @example 2600000
+                 */
+                revenue: number;
+                /**
+                 * @description Delivered orders
+                 * @example 22
+                 */
+                orders: number;
+            }[];
+            /** @description Orders placed in the period (by order date), whatever happened to them since */
+            placed: {
+                /**
+                 * @description Orders placed in the period
+                 * @example 45
+                 */
+                total: number;
+                /** @description Where the orders placed in the period are now */
+                byStatus: {
+                    PENDING: number;
+                    CONFIRMED: number;
+                    SHIPPED: number;
+                    DELIVERED: number;
+                    CANCELLED: number;
+                };
+            };
+            /** @description The 10 products with the most sales in delivered, not refunded orders (products deleted since are left out) */
+            topProducts: {
+                /** Format: uuid */
+                productId: string;
+                /** @example Midnight Oud */
+                name: string;
+                /** @example Maison Lumière */
+                brandName: string | null;
+                imageUrl: string | null;
+                /**
+                 * @description Units sold
+                 * @example 12
+                 */
+                units: number;
+                /**
+                 * @description What they sold for (item prices, without delivery), minor units (paisa)
+                 * @example 1548000
+                 */
+                revenue: number;
+            }[];
+            lowStock: {
+                /**
+                 * @description Offered sizes of live products with 3 or fewer units (out of stock included)
+                 * @example 4
+                 */
+                count: number;
+                /** @description The 10 lowest, fewest first */
+                items: {
+                    /** Format: uuid */
+                    productId: string;
+                    /** @example Midnight Oud */
+                    productName: string;
+                    /** Format: uuid */
+                    variantId: string;
+                    /** @example 100ml */
+                    label: string;
+                    /** @enum {string} */
+                    kind: "FULL_SIZE" | "DECANT";
+                    /**
+                     * @description Units left
+                     * @example 1
+                     */
+                    stock: number;
+                }[];
+            };
+        };
+        /** @description The period reported on */
+        AnalyticsWindow: {
+            range: components["schemas"]["AnalyticsRange"];
+            /**
+             * @description What each entry in `series` covers
+             * @enum {string}
+             */
+            granularity: "day" | "month";
+            /**
+             * Format: date
+             * @description First day covered
+             * @example 2026-09-12
+             */
+            from: string;
+            /**
+             * Format: date
+             * @description Last day covered (today)
+             * @example 2026-10-11
+             */
+            to: string;
+        };
         SuperAdminSession: {
             /** @description Send as `Authorization: Bearer <token>`. Valid for 12 hours. */
             token: string;
@@ -4164,6 +4404,215 @@ export interface components {
              * @example 0
              */
             emailsFailed: number;
+        };
+        /** @description The console’s overview */
+        PlatformOverview: {
+            /**
+             * @description Monthly recurring revenue: what live (ACTIVE and PAST_DUE) stores pay per month for their subscriptions (yearly prices ÷ 12, rounded), minor units (paisa)
+             * @example 2499500
+             */
+            mrr: number;
+            /**
+             * @description Live stores paying for a subscription (price above 0)
+             * @example 7
+             */
+            billedStores: number;
+            /** @description How many stores are in each status */
+            tenantsByStatus: {
+                PROVISIONING: number;
+                SETUP: number;
+                ACTIVE: number;
+                PAST_DUE: number;
+                SUSPENDED: number;
+            };
+            paymentsToVerify: {
+                /**
+                 * @description Payments waiting to be confirmed or rejected
+                 * @example 2
+                 */
+                count: number;
+                /**
+                 * @description Their total, minor units (paisa)
+                 * @example 999800
+                 */
+                amount: number;
+            };
+            /** @description Live stores with a paid subscription due in the next 7 days (today included), soonest first */
+            renewals: {
+                tenant: components["schemas"]["LedgerTenant"];
+                /** @example Growth */
+                planName: string;
+                /** @enum {string} */
+                billingCycle: "MONTHLY" | "YEARLY";
+                /**
+                 * @description Price per cycle, minor units (paisa)
+                 * @example 499900
+                 */
+                price: number;
+                /**
+                 * Format: date
+                 * @example 2026-10-15
+                 */
+                dueDate: string;
+                /**
+                 * @description Days until the due date (0: today)
+                 * @example 4
+                 */
+                daysLeft: number;
+            }[];
+            earnings: {
+                window: components["schemas"]["AnalyticsWindow"];
+                /**
+                 * @description Confirmed subscription payments in the last 12 months, minor units (paisa)
+                 * @example 29994000
+                 */
+                total: number;
+                series: components["schemas"]["EarningsPoint"][];
+            };
+            sales: {
+                window: components["schemas"]["AnalyticsWindow"];
+                /**
+                 * @description completed − refunded, minor units (paisa)
+                 * @example 4391000
+                 */
+                net: number;
+                /**
+                 * @description Delivered orders
+                 * @example 38
+                 */
+                orders: number;
+                /** @description The 5 stores with the most net sales in the last 30 days */
+                topTenants: components["schemas"]["TenantSales"][];
+            };
+        };
+        /** @description A store, for dashboards and ledgers */
+        LedgerTenant: {
+            /** Format: uuid */
+            id: string;
+            /** @example Acme Perfumes */
+            name: string;
+            /** @example acme */
+            slug: string;
+            /**
+             * @description PROVISIONING: schema being created. SETUP: admin only, storefront "Opening soon". ACTIVE: live. PAST_DUE: live, but the subscription is overdue (grace period). SUSPENDED: storefront unavailable, admin limited to Billing.
+             * @enum {string}
+             */
+            status: "PROVISIONING" | "SETUP" | "ACTIVE" | "PAST_DUE" | "SUSPENDED";
+        };
+        EarningsPoint: {
+            /**
+             * @description A day ("2026-10-11") or, for 12m, a month ("2026-10")
+             * @example 2026-10-11
+             */
+            period: string;
+            /**
+             * @description Confirmed subscription payments, minor units (paisa)
+             * @example 999800
+             */
+            amount: number;
+            /**
+             * @description How many
+             * @example 2
+             */
+            payments: number;
+        };
+        /** @description One store’s sales in the period, from the sales ledger */
+        TenantSales: {
+            tenant: components["schemas"]["LedgerTenant"];
+            /**
+             * @description Delivered orders’ totals, minor units (paisa)
+             * @example 4520000
+             */
+            completed: number;
+            /**
+             * @description Delivered orders refunded in the period, minor units (paisa)
+             * @example 129000
+             */
+            refunded: number;
+            /**
+             * @description completed − refunded, minor units (paisa)
+             * @example 4391000
+             */
+            net: number;
+            /**
+             * @description Delivered orders
+             * @example 38
+             */
+            orders: number;
+            /**
+             * @description Refunded orders
+             * @example 1
+             */
+            refunds: number;
+        };
+        /** @description Your earnings: subscription payments confirmed in the period */
+        EarningsLedger: {
+            window: components["schemas"]["AnalyticsWindow"];
+            /**
+             * @description Confirmed subscription payments in the period (dated by confirmation), minor units (paisa)
+             * @example 29994000
+             */
+            total: number;
+            /**
+             * @description How many
+             * @example 6
+             */
+            payments: number;
+            series: components["schemas"]["EarningsPoint"][];
+            /** @description The confirmed payments, newest confirmation first (one page) */
+            entries: components["schemas"]["BillingPaymentList"];
+        };
+        /** @description Stores’ sales from the sales ledger: an order counts on the day it was delivered, and a refund of a delivered order comes off on the day it was refunded. */
+        SalesLedger: {
+            window: components["schemas"]["AnalyticsWindow"];
+            /** @description Every store together (those matching `q`, if given) */
+            totals: {
+                /**
+                 * @description Delivered orders’ totals, minor units (paisa)
+                 * @example 4520000
+                 */
+                completed: number;
+                /**
+                 * @description Delivered orders refunded in the period, minor units (paisa)
+                 * @example 129000
+                 */
+                refunded: number;
+                /**
+                 * @description completed − refunded, minor units (paisa)
+                 * @example 4391000
+                 */
+                net: number;
+                /**
+                 * @description Delivered orders
+                 * @example 38
+                 */
+                orders: number;
+                /**
+                 * @description Refunded orders
+                 * @example 1
+                 */
+                refunds: number;
+            };
+            series: components["schemas"]["SalesPoint"][];
+            /** @description Stores with sales or refunds in the period, most net sales first */
+            tenants: components["schemas"]["TenantSales"][];
+        };
+        SalesPoint: {
+            /**
+             * @description A day ("2026-10-11") or, for 12m, a month ("2026-10")
+             * @example 2026-10-11
+             */
+            period: string;
+            /**
+             * @description completed − refunded, minor units (paisa)
+             * @example 4391000
+             */
+            net: number;
+            /**
+             * @description Delivered orders
+             * @example 38
+             */
+            orders: number;
         };
         /** @description Storefront design tokens. Set per tenant by the superadmin. */
         ThemeOutput: {
@@ -9345,6 +9794,54 @@ export interface operations {
             };
         };
     };
+    adminGetAnalytics: {
+        parameters: {
+            query?: {
+                range?: components["schemas"]["AnalyticsRange"];
+            };
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The dashboard */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StoreAnalytics"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The user's role doesn't include "View sales reports" (`analytics.view`), or the store's plan doesn't allow the sales dashboard. Or: the store is SUSPENDED: only sign-in and Billing work until its payment is confirmed. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Store not found: no reachable store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
     superAdminLogin: {
         parameters: {
             query?: never;
@@ -10917,6 +11414,90 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The overview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PlatformOverview"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetEarningsLedger: {
+        parameters: {
+            query?: {
+                range?: components["schemas"]["AnalyticsRange"];
+                /** @description Only payments from stores whose name, slug or owner email contains this, or with this reference */
+                q?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Your earnings in the period */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EarningsLedger"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminGetSalesLedger: {
+        parameters: {
+            query?: {
+                range?: components["schemas"]["AnalyticsRange"];
+                /** @description Only stores whose name or slug contains this (totals and chart included) */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sales in the period */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SalesLedger"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
             500: components["responses"]["InternalError"];
         };

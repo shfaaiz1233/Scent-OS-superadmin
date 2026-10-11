@@ -34,3 +34,11 @@ export type PaymentMethod = BillingPayment["method"];
 export type ReceiptLink = Schemas["ReceiptLink"];
 export type PlatformSettings = Schemas["PlatformSettings"];
 export type BillingRun = Schemas["BillingRun"];
+
+// Analytics and ledgers (Phase 6)
+export type AnalyticsRange = Schemas["AnalyticsRange"];
+export type AnalyticsWindow = Schemas["AnalyticsWindow"];
+export type PlatformOverview = Schemas["PlatformOverview"];
+export type EarningsLedger = Schemas["EarningsLedger"];
+export type SalesLedger = Schemas["SalesLedger"];
+export type TenantSales = Schemas["TenantSales"];

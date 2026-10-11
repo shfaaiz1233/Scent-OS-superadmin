@@ -47,7 +47,8 @@ src/
 │   ├── globals.css             shadcn neutral tokens (light + .dark)
 │   ├── login/                  Sign-in (public): page, login-form, actions (loginAction, logoutAction)
 │   └── (console)/              Signed-in console: layout loads the superadmin, sidebar + top bar
-│       ├── page.tsx            Overview (KPIs; Phase 6)
+│       ├── page.tsx            Overview: KPIs (MRR, live stores, payments to verify, renewals), earnings chart,
+│       │                       stores by status, renewals in 7 days, top stores (GET /api/superadmin/analytics/overview)
 │       ├── tenants/
 │       │   ├── page.tsx        List: status, billing and plan filters, search, pagination (searchParams)
 │       │   ├── actions.ts      Every tenant server action (incl. subscription, due date, record payment, features)
@@ -62,7 +63,8 @@ src/
 │       │                       confirm, reject), actions
 │       ├── settings/           settings-form (notification email, WhatsApp, bank accounts, reminder/grace days),
 │       │                       billing-run-card (Run billing now), actions
-│       ├── ledger/             Placeholder until Phase 6
+│       ├── ledger/             Tabs (?tab=earnings|sales), range (RangePicker) and search in the URL: your earnings
+│       │                       (KPIs, chart, confirmed payments, pages) and store sales (KPIs, chart, per-store table)
 ├── components/
 │   ├── ui/                     shadcn/ui, generated; don't hand-edit
 │   ├── app-sidebar.tsx         Navigation (items in lib/navigation.ts); footer: signed-in user + sign out
@@ -73,6 +75,8 @@ src/
 │   ├── money-input.tsx         Rupee input with an "Rs" prefix (parse with parseRupees)
 │   ├── pricing-fields.tsx      Plan, cycle, pricing mode and value, with the resulting price
 │   ├── features-editor.tsx     PlanFeaturesEditor (a plan's values), FeatureOverridesEditor (a store's overrides)
+│   ├── range-picker.tsx        The 7 / 30 / 90 days / 12 months links (server component; the range lives in the URL)
+│   ├── period-chart.tsx        PeriodChart: money by day or month as bars (shadcn chart / Recharts), count in the tooltip
 │   ├── theme-option.tsx        ThemeOption (a radio card) + ThemeThumbnail (a theme drawn from its tokens)
 │   ├── providers.tsx, theme-toggle.tsx
 └── lib/
@@ -83,6 +87,7 @@ src/
     ├── format.ts               formatDate, formatDateTime, formatDay (API calendar dates), formatPrice, parseRupees, rupeesInput
     ├── pricing.ts              PricingDraft → SubscriptionInput, previewPrice (mirrors the API), labels
     ├── features.ts             featureValueLabel, featuresSummary (server-safe)
+    ├── analytics.ts            RANGES, parseRange, periodLabel, formatCompactPrice (server-safe; used by the chart too)
     ├── theme-fonts.ts          The store theme fonts (preload: false), for the theme preview
     ├── theme-font-family.ts    THEME_FONT_FAMILY: theme font → CSS font-family (client-safe)
     └── utils.ts                cn()

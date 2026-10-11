@@ -42,3 +42,7 @@ export type PlatformOverview = Schemas["PlatformOverview"];
 export type EarningsLedger = Schemas["EarningsLedger"];
 export type SalesLedger = Schemas["SalesLedger"];
 export type TenantSales = Schemas["TenantSales"];
+
+// Audit log (Phase 7)
+export type AuditLogEntry = Schemas["AuditLogEntry"];
+export type AuditLogList = Schemas["AuditLogList"];

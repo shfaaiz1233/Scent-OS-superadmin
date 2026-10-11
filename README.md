@@ -45,8 +45,9 @@ Without `--password`, a strong password is generated and printed once. Sessions 
 - **Overview tab:** edit the store and owner details, add or remove domains (**Make primary** chooses which one links use), and create the owner's **set-password link** (Owner access). It's emailed to the owner (when the API has Resend set up) and shown to you, to send on WhatsApp if needed. It's valid for 7 days, works once, and also serves as a password reset.
 - **Billing tab:** the store's plan, billing cycle and price (the plan's, a percentage or an amount off, or a custom price; changes ask for confirmation), where it stands (paid until, due soon, overdue, suspended), **Move due date** (free days, with a reason), **Record a payment** received outside the store's Billing page, and its payments.
 - **Features tab:** the plan's features, with per-store overrides (e.g. more staff accounts, or the slider on a smaller plan).
+- **Activity tab:** this store's last 20 audit log entries (who changed what), with a link to all of them.
 - **Open store admin** (top of a store's page): opens the store's own `/admin` in a new tab, signed in as **Platform** with owner rights, to edit its homepage, menus, pages, settings or products for the owner. The session lasts up to 4 hours; each use is in the audit log. Renaming the store here or in the store's Settings changes the same name.
-- **Theme tab:** pick a preset, adjust colours, corner radius, fonts, motion, product cards and buttons, and watch the live preview. Colour pairs that are hard to read (below the WCAG AA contrast of 4.5:1) are flagged. Saving updates the storefront on its next page load.
+- **Theme tab:** pick a preset, adjust colours, corner radius, fonts, motion, **animations** (how sections and products appear on scroll, the homepage slider effect, page changes, and the Add to cart effect; each with a one-line explanation), product cards and buttons, and watch the live preview. Colour pairs that are hard to read (below the WCAG AA contrast of 4.5:1) are flagged. Saving updates the storefront on its next page load.
 
 ## Billing
 
@@ -55,6 +56,10 @@ Without `--password`, a strong password is generated and printed once. Sessions 
 - **Settings:** your notification email (daily digest, payment notices), the WhatsApp number and bank accounts owners pay into, reminder and grace days, and **Run billing now** (the daily run, which on production also runs by itself at 09:00 Pakistan time).
 
 Every change is recorded in the audit log.
+
+## Audit log
+
+Console → **Audit log** lists every change made in the console (stores, plans, payments, settings, owner access, Open store admin) and the billing run's status changes (past due, suspended, reopened), newest first: when, what, which store, who (or "System") and the details. Filter by action, search by action, store or superadmin, or open it for one store from the store's Activity tab.
 
 ## Overview and ledger
 
@@ -75,7 +80,7 @@ Every change is recorded in the audit log.
 
 ## Status
 
-Phase 0 (the console shell: sidebar, top bar, light and dark mode, a page for each section) and Phases 1, 3, 5 and 6 are done:
+Phase 0 (the console shell: sidebar, top bar, light and dark mode, a page for each section) and Phases 1, 3, 5, 6 and 7 are done:
 
 | Phase | Adds |
 | --- | --- |
@@ -83,6 +88,7 @@ Phase 0 (the console shell: sidebar, top bar, light and dark mode, a page for ea
 | 3 ✅ | **Open store admin**: edit a store's content (slider, homepage sections, menus, footer, pages, settings) in its own admin, signed in as Platform |
 | 5 ✅ | Plans and features, subscriptions with per-tenant discounts or custom prices, feature overrides, payments (search, receipts, confirm/reject, record), due dates, platform settings and the billing run |
 | 6 ✅ | Overview (MRR, stores by status, payments to verify, renewals, earnings chart, top stores) and Ledger (your earnings and store sales) |
+| 7 ✅ | Audit log (and each store's Activity tab), shared rate limits, structured error logs |
 
 Orders (Phase 4) are handled in each store's own admin; the console sees their totals in the Overview and Ledger.
 

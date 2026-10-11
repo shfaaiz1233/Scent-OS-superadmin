@@ -4,6 +4,7 @@ import {
   LayoutDashboardIcon,
   type LucideIcon,
   PackageIcon,
+  ScrollTextIcon,
   SettingsIcon,
   StoreIcon,
 } from "lucide-react";
@@ -17,5 +18,6 @@ export const NAV_ITEMS: NavItem[] = [
   { title: "Plans", href: "/plans", icon: PackageIcon, description: "Subscription plans, prices and feature flags" },
   { title: "Payments", href: "/payments", icon: CreditCardIcon, description: "Receipts to verify, confirmed payments" },
   { title: "Ledger", href: "/ledger", icon: BookOpenTextIcon, description: "Your earnings and tenants' completed sales" },
+  { title: "Audit log", href: "/audit", icon: ScrollTextIcon, description: "Who changed what, and when" },
   { title: "Settings", href: "/settings", icon: SettingsIcon, description: "Notification email, bank details, reminders" },
 ];

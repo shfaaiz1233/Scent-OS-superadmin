@@ -11,6 +11,8 @@ export class ApiError extends Error {
     public readonly status: number,
     message: string,
     public readonly details: NonNullable<ErrorResponse["error"]["details"]> = [],
+    /** The API's X-Request-Id: it's in the API's logs next to the error. */
+    public readonly requestId: string | null = null,
   ) {
     super(message);
     this.name = "ApiError";
@@ -30,12 +32,14 @@ function apiUrl(): string {
   return url.replace(/\/$/, "");
 }
 
-// Forward the browser's IP so the API's sign-in rate limit counts per user, not per server.
+// Identify this server to the API (shared secret) and forward the browser's IP, so the API's rate
+// limits count per user, not per server.
 async function clientIpHeaders(): Promise<Record<string, string>> {
   const secret = process.env.API_BFF_SECRET;
+  if (!secret) return {};
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? h.get("x-real-ip");
-  return secret && ip ? { "x-client-ip": ip, "x-bff-secret": secret } : {};
+  return ip ? { "x-client-ip": ip, "x-bff-secret": secret } : { "x-bff-secret": secret };
 }
 
 /**
@@ -64,7 +68,7 @@ export async function api<T>(path: string, { method = "GET", body, auth = true }
 
   const json = (await res.json().catch(() => null)) as { data?: T } & Partial<ErrorResponse> | null;
   if (!res.ok) {
-    throw new ApiError(res.status, json?.error?.message ?? `The API responded ${res.status}`, json?.error?.details);
+    throw new ApiError(res.status, json?.error?.message ?? `The API responded ${res.status}`, json?.error?.details, res.headers.get("x-request-id"));
   }
   return json?.data as T;
 }

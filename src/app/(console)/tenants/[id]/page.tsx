@@ -2,13 +2,14 @@ import { ExternalLinkIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AuditLogTable } from "@/components/audit-log-table";
 import { PageHeader } from "@/components/page-header";
 import { BillingStateBadge, TenantStatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiError, api } from "@/lib/api/server";
-import type { BillingPaymentList, FeatureInfo, Plan, TenantBilling, TenantDetail, ThemePreset } from "@/lib/api/types";
+import type { AuditLogList, BillingPaymentList, FeatureInfo, Plan, TenantBilling, TenantDetail, ThemePreset } from "@/lib/api/types";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { PER_CYCLE } from "@/lib/pricing";
 import { PaymentsTable } from "../../payments/payments-table";
@@ -41,12 +42,13 @@ export async function generateMetadata({ params }: PageProps<"/tenants/[id]">): 
 export default async function TenantPage({ params }: PageProps<"/tenants/[id]">) {
   const { id } = await params;
   const tenant = await getTenant(id);
-  const [presets, billing, plans, payments, catalogue] = await Promise.all([
+  const [presets, billing, plans, payments, catalogue, activity] = await Promise.all([
     api<ThemePreset[]>("/api/superadmin/theme-presets"),
     api<TenantBilling>(`/api/superadmin/tenants/${tenant.id}/billing`),
     api<Plan[]>("/api/superadmin/plans?status=all"),
     api<BillingPaymentList>(`/api/superadmin/payments?tenantId=${tenant.id}&pageSize=10`),
     api<FeatureInfo[]>("/api/superadmin/features"),
+    api<AuditLogList>(`/api/superadmin/audit-logs?tenantId=${tenant.id}&pageSize=20`),
   ]);
   const provisioning = tenant.status === "PROVISIONING";
   // A store can be put on any active plan, and stay on its current one even if that was deactivated.
@@ -96,6 +98,7 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
             <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="features">Features</TabsTrigger>
             <TabsTrigger value="theme">Theme</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="grid gap-4 lg:grid-cols-2">
@@ -157,6 +160,21 @@ export default async function TenantPage({ params }: PageProps<"/tenants/[id]">)
 
           <TabsContent value="theme">
             <ThemeEditor tenantId={tenant.id} savedTheme={tenant.theme} presets={presets} />
+          </TabsContent>
+
+          <TabsContent value="activity" className="grid gap-3">
+            {activity.items.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nothing recorded for this store yet.</p>
+            ) : (
+              <AuditLogTable entries={activity.items} showStore={false} />
+            )}
+            {activity.total > activity.items.length && (
+              <p className="text-sm">
+                <Link href={`/audit?tenantId=${tenant.id}`} className="hover:underline">
+                  All {activity.total} entries in the audit log →
+                </Link>
+              </p>
+            )}
           </TabsContent>
         </Tabs>
       )}

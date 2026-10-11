@@ -140,14 +140,17 @@ function SelectField<T extends string>({
   value,
   options,
   onChange,
+  hint,
 }: {
   label: string;
   value: T;
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
+  /** One line under the field: what it does. */
+  hint?: string;
 }) {
   return (
-    <div className="grid gap-1.5">
+    <div className="grid content-start gap-1.5">
       <Label className="text-xs font-normal text-muted-foreground">{label}</Label>
       <Select value={value} onValueChange={(v) => onChange(v as T)}>
         <SelectTrigger aria-label={label} className="w-full">
@@ -161,9 +164,37 @@ function SelectField<T extends string>({
           ))}
         </SelectContent>
       </Select>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
+
+type Animations = Theme["animations"];
+
+const REVEAL_OPTIONS: { value: Animations["reveal"]; label: string; hint: string }[] = [
+  { value: "none", label: "None", hint: "Sections and products are simply there." },
+  { value: "fade", label: "Fade in", hint: "They fade in as shoppers scroll to them." },
+  { value: "rise", label: "Rise up", hint: "They fade in while rising a little: the classic." },
+  { value: "zoom", label: "Zoom in", hint: "They grow into place: playful." },
+  { value: "blur", label: "Come into focus", hint: "They sharpen from a soft blur: luxurious." },
+];
+const HERO_OPTIONS: { value: Animations["hero"]; label: string; hint: string }[] = [
+  { value: "none", label: "Still", hint: "Slides change without effects." },
+  { value: "kenburns", label: "Slow zoom (Ken Burns)", hint: "The slide on show slowly zooms in; its text rises in." },
+  { value: "parallax", label: "Parallax", hint: "The image drifts slower than the page as shoppers scroll; text rises in." },
+];
+const PAGE_OPTIONS: { value: Animations["pageTransition"]; label: string; hint: string }[] = [
+  { value: "none", label: "None", hint: "Pages change instantly." },
+  { value: "fade", label: "Fade", hint: "Each new page fades in." },
+  { value: "rise", label: "Rise", hint: "Each new page fades in from slightly below." },
+];
+const CART_OPTIONS: { value: Animations["cart"]; label: string; hint: string }[] = [
+  { value: "none", label: "None", hint: "Only the “added to your cart” message." },
+  { value: "bounce", label: "Bounce the cart", hint: "The cart icon bounces and its count pops." },
+  { value: "fly", label: "Fly to the cart", hint: "The product photo flies into the cart icon, which then bounces." },
+];
+
+const hintFor = <T extends string>(options: { value: T; hint: string }[], value: T) => options.find((o) => o.value === value)?.hint;
 
 function SwitchField({ id, label, checked, onChange }: { id: string; label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -339,6 +370,46 @@ export function ThemeEditor({ tenantId, savedTheme, presets }: { tenantId: strin
               value={theme.fonts.body}
               options={FONTS}
               onChange={(body) => edit((t) => ({ ...t, fonts: { ...t.fonts, body } }))}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Animations</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              How the storefront moves. Speed follows Motion above; shoppers whose device asks for reduced motion see none.
+              {theme.motion === "none" && " Motion is set to None, so these are off."}
+            </p>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <SelectField
+              label="Sections and products"
+              value={theme.animations.reveal}
+              options={REVEAL_OPTIONS}
+              hint={hintFor(REVEAL_OPTIONS, theme.animations.reveal)}
+              onChange={(reveal) => edit((t) => ({ ...t, animations: { ...t.animations, reveal } }))}
+            />
+            <SelectField
+              label="Homepage slider"
+              value={theme.animations.hero}
+              options={HERO_OPTIONS}
+              hint={hintFor(HERO_OPTIONS, theme.animations.hero)}
+              onChange={(hero) => edit((t) => ({ ...t, animations: { ...t.animations, hero } }))}
+            />
+            <SelectField
+              label="Page changes"
+              value={theme.animations.pageTransition}
+              options={PAGE_OPTIONS}
+              hint={hintFor(PAGE_OPTIONS, theme.animations.pageTransition)}
+              onChange={(pageTransition) => edit((t) => ({ ...t, animations: { ...t.animations, pageTransition } }))}
+            />
+            <SelectField
+              label="Add to cart"
+              value={theme.animations.cart}
+              options={CART_OPTIONS}
+              hint={hintFor(CART_OPTIONS, theme.animations.cart)}
+              onChange={(cart) => edit((t) => ({ ...t, animations: { ...t.animations, cart } }))}
             />
           </CardContent>
         </Card>

@@ -26,6 +26,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/storefront/sitemap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the sitemap’s contents
+         * @description What the storefront’s `/sitemap.xml` lists: live products, collections with at least one live product, and published pages, with when each last changed, and the base URL on the store’s primary domain (so every domain’s sitemap points search engines at one address). Live stores only (ACTIVE, PAST_DUE): for the others the storefront serves a robots.txt that keeps search engines away.
+         *
+         *     The store is identified by the calling domain: the `X-Store-Domain` header (sent by the storefront server), else `Origin` (e.g. `https://acme.com` or `acme.com`), else `Host`. Responds 404 `Store not found` when no store serves that domain.
+         */
+        get: operations["storefrontGetSitemap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/storefront/products": {
         parameters: {
             query?: never;
@@ -2136,6 +2158,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/superadmin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List audit log entries
+         * @description Every change made from the console (stores, plans, payments, settings, owner access) and the billing job’s status changes, newest first. Filter by store or action, or search actions, stores and superadmins. `actions` lists every action recorded so far, for a filter.
+         */
+        get: operations["superAdminListAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/internal/billing/run": {
         parameters: {
             query?: never;
@@ -2145,9 +2187,29 @@ export interface paths {
         };
         /**
          * Daily billing run
-         * @description Called once a day by Vercel Cron (`crons` in vercel.json, production only) with `Authorization: Bearer <CRON_SECRET>`. For each store with a paid period: a "payment due" reminder within the reminder days; on the due date the store becomes PAST_DUE (still live) and gets a "due today" email, then an "overdue" email each grace day; after the grace days it is SUSPENDED and the owner and the notification email are told. Free subscriptions move on to their next period. Then a digest goes to the notification email (when there is something in it). Stores in SETUP and suspended stores are left alone. Every step is idempotent: emails go out once each, so running it again the same day does nothing more. The same run is available to superadmins as `POST /api/superadmin/billing/run`.
+         * @description Called once a day by Vercel Cron (`crons` in vercel.json, production only) with `Authorization: Bearer <CRON_SECRET>`. For each store with a paid period: a "payment due" reminder within the reminder days; on the due date the store becomes PAST_DUE (still live) and gets a "due today" email, then an "overdue" email each grace day; after the grace days it is SUSPENDED and the owner and the notification email are told. Free subscriptions move on to their next period. Then a digest goes to the notification email (when there is something in it). Stores in SETUP and suspended stores are left alone. Every step is idempotent: emails go out once each, so running it again the same day does nothing more. The same run is available to superadmins as `POST /api/superadmin/billing/run`. If the run fails, the platform’s notification email is told (at most once a day) and the error is logged as `billing.run.failed`.
          */
         get: operations["internalRunBilling"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check the API’s health
+         * @description For uptime monitors: 200 when the API answers and its database does too (a trivial query within 3 seconds), 503 otherwise. Never cached, and it reveals nothing but ok or error and the deployed commit.
+         */
+        get: operations["getHealth"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2290,10 +2352,11 @@ export interface components {
                 body: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
             };
             /**
-             * @description Transition speed, hover lift, image zoom and slider autoplay
+             * @description Transition speed, hover lift, image zoom and slider autoplay. none also turns every animation off
              * @enum {string}
              */
             motion: "none" | "subtle" | "lively";
+            animations: components["schemas"]["ThemeAnimations"];
             productCard: {
                 /** @enum {string} */
                 imageAspect: "square" | "portrait";
@@ -2391,6 +2454,29 @@ export interface components {
             /** @example #111111 */
             footerForeground: string;
         };
+        /** @description Storefront animations. They follow `motion` for speed, and are off for shoppers who ask their device for reduced motion. */
+        ThemeAnimations: {
+            /**
+             * @description How homepage sections and product cards appear as shoppers scroll to them: fade in, rise up, zoom in or come into focus (blur). Cards in a row follow one another. Content already on screen when a page opens is never hidden.
+             * @enum {string}
+             */
+            reveal: "none" | "fade" | "rise" | "zoom" | "blur";
+            /**
+             * @description The homepage slider: kenburns slowly zooms the image of the slide on show; parallax moves the image slower than the page while scrolling. Slide text rises in either way.
+             * @enum {string}
+             */
+            hero: "none" | "kenburns" | "parallax";
+            /**
+             * @description How a new page comes in when shoppers move around the store
+             * @enum {string}
+             */
+            pageTransition: "none" | "fade" | "rise";
+            /**
+             * @description Feedback on Add to cart: the cart icon bounces, or the product image flies into it (then bounces)
+             * @enum {string}
+             */
+            cart: "none" | "bounce" | "fly";
+        };
         /** @description Only the features listed; a key left out isn’t changed (plan default, or no override). */
         FeatureOverrides: {
             /** @description Products can be sold as decants (vials poured from the bottle) as well as full sizes. */
@@ -2449,6 +2535,35 @@ export interface components {
                     message: string;
                 }[];
             };
+        };
+        /** @description What a live store’s sitemap lists */
+        StorefrontSitemap: {
+            /**
+             * @description The storefront on its primary domain, without a trailing slash: every URL in the sitemap uses it
+             * @example https://acme.com
+             */
+            baseUrl: string;
+            /** @description Live products (/products/<id>), most recently changed first; at most 45,000 */
+            products: {
+                /** Format: uuid */
+                id: string;
+                /** @description When it last changed, if known */
+                updatedAt: string | null;
+            }[];
+            /** @description Collections with at least one live product (/collections/<slug>): built-in ones, then hand-picked ones */
+            collections: {
+                /** @example men */
+                slug: string;
+                /** @description When it last changed, if known */
+                updatedAt: string | null;
+            }[];
+            /** @description Published pages (/pages/<slug>) */
+            pages: {
+                /** @example about */
+                slug: string;
+                /** @description When it last changed, if known */
+                updatedAt: string | null;
+            }[];
         };
         StorefrontProductList: {
             items: components["schemas"]["StorefrontProductCard"][];
@@ -4614,6 +4729,69 @@ export interface components {
              */
             orders: number;
         };
+        AuditLogList: {
+            /** @description Newest first */
+            items: components["schemas"]["AuditLogEntry"][];
+            total: number;
+            page: number;
+            pageSize: number;
+            /** @description Every action recorded so far, A–Z (for a filter) */
+            actions: string[];
+        };
+        /** @description One recorded change */
+        AuditLogEntry: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description What happened, e.g. tenant.suspend, plan.update, billing.past_due
+             * @example tenant.suspend
+             */
+            action: string;
+            /** @description The store it concerns; null for platform-wide changes (plans, settings) */
+            tenant: {
+                /** Format: uuid */
+                id: string;
+                /** @example Acme Perfumes */
+                name: string;
+                /** @example acme */
+                slug: string;
+            } | null;
+            /** @description The superadmin who did it; null for the billing job and command-line scripts */
+            actor: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                email: string;
+            } | null;
+            /** @description What changed, as recorded (e.g. { "from": "ACTIVE", "reason": "…" }) */
+            data: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Whether the API can serve requests */
+        Health: {
+            /**
+             * @description ok: the API and its database work. error: something it needs is down (HTTP 503).
+             * @enum {string}
+             */
+            status: "ok" | "error";
+            checks: {
+                /**
+                 * @description A trivial query to the database answered within 3 seconds
+                 * @enum {string}
+                 */
+                database: "ok" | "error";
+            };
+            /**
+             * @description The deployed commit (Vercel); null locally
+             * @example 4632a64
+             */
+            version: string | null;
+            /** Format: date-time */
+            time: string;
+        };
         /** @description Storefront design tokens. Set per tenant by the superadmin. */
         ThemeOutput: {
             /**
@@ -4634,10 +4812,11 @@ export interface components {
                 body: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
             };
             /**
-             * @description Transition speed, hover lift, image zoom and slider autoplay
+             * @description Transition speed, hover lift, image zoom and slider autoplay. none also turns every animation off
              * @enum {string}
              */
             motion: "none" | "subtle" | "lively";
+            animations: components["schemas"]["ThemeAnimationsOutput"];
             productCard: {
                 /** @enum {string} */
                 imageAspect: "square" | "portrait";
@@ -4735,6 +4914,29 @@ export interface components {
             /** @example #111111 */
             footerForeground: string;
         };
+        /** @description Storefront animations. They follow `motion` for speed, and are off for shoppers who ask their device for reduced motion. */
+        ThemeAnimationsOutput: {
+            /**
+             * @description How homepage sections and product cards appear as shoppers scroll to them: fade in, rise up, zoom in or come into focus (blur). Cards in a row follow one another. Content already on screen when a page opens is never hidden.
+             * @enum {string}
+             */
+            reveal: "none" | "fade" | "rise" | "zoom" | "blur";
+            /**
+             * @description The homepage slider: kenburns slowly zooms the image of the slide on show; parallax moves the image slower than the page while scrolling. Slide text rises in either way.
+             * @enum {string}
+             */
+            hero: "none" | "kenburns" | "parallax";
+            /**
+             * @description How a new page comes in when shoppers move around the store
+             * @enum {string}
+             */
+            pageTransition: "none" | "fade" | "rise";
+            /**
+             * @description Feedback on Add to cart: the cart icon bounces, or the product image flies into it (then bounces)
+             * @enum {string}
+             */
+            cart: "none" | "bounce" | "fly";
+        };
         /** @description Only the features listed; a key left out isn’t changed (plan default, or no override). */
         FeatureOverridesOutput: {
             /** @description Products can be sold as decants (vials poured from the bottle) as well as full sizes. */
@@ -4765,6 +4967,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description Too many requests from this client for this store: the shared limit (300 a minute) or this operation’s own. The `RateLimit` and `RateLimit-Policy` headers say when to try again. */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description Unexpected server error. */
         InternalError: {
             headers: {
@@ -4776,15 +4987,6 @@ export interface components {
         };
         /** @description The request failed validation. `details` lists each invalid field. */
         ValidationError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["ErrorResponse"];
-            };
-        };
-        /** @description Too many attempts from this client for this store; try again in 15 minutes. */
-        TooManyRequests: {
             headers: {
                 [name: string]: unknown;
             };
@@ -4841,6 +5043,43 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    storefrontGetSitemap: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Domain of the store. Sent by the storefront server; else `Origin`, else `Host` is used. */
+                "x-store-domain"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sitemap’s contents */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StorefrontSitemap"];
+                    };
+                };
+            };
+            /** @description Store not found: no live store serves the calling domain. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -4902,6 +5141,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -4943,6 +5183,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -4982,6 +5223,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5023,6 +5265,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5058,6 +5301,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5096,6 +5340,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5131,6 +5376,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5166,6 +5412,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5204,6 +5451,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5294,6 +5542,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5345,6 +5594,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5490,6 +5740,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5888,6 +6139,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5933,6 +6185,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -5995,6 +6248,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6038,6 +6292,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6096,6 +6351,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6238,6 +6494,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6287,6 +6544,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6432,6 +6690,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6486,6 +6745,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6535,6 +6795,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6598,6 +6859,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6664,6 +6926,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6718,6 +6981,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6767,6 +7031,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6831,6 +7096,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6898,6 +7164,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6952,6 +7219,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -6997,6 +7265,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7042,6 +7311,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7116,6 +7386,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7165,6 +7436,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7242,6 +7514,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7287,6 +7560,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7332,6 +7606,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7398,6 +7673,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
             /** @description The image storage service failed or refused the request. */
             502: {
@@ -7461,6 +7737,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7531,6 +7808,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7594,6 +7872,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7652,6 +7931,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7697,6 +7977,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7742,6 +8023,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7808,6 +8090,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7877,6 +8160,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7931,6 +8215,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -7976,6 +8261,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8081,6 +8367,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8126,6 +8413,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8206,6 +8494,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8251,6 +8540,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8414,6 +8704,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8459,6 +8750,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8535,6 +8827,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8584,6 +8877,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8663,6 +8957,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8708,6 +9003,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8755,6 +9051,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8800,6 +9097,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8881,6 +9179,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8932,6 +9231,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -8977,6 +9277,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9022,6 +9323,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9090,6 +9392,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9135,6 +9438,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9202,6 +9506,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9256,6 +9561,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9305,6 +9611,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9390,6 +9697,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9459,6 +9767,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9515,6 +9824,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9560,6 +9870,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9610,6 +9921,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9687,6 +9999,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
             /** @description File storage couldn’t be reached to check the receipt. */
             502: {
@@ -9773,6 +10086,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
             /** @description File storage couldn’t be reached. */
             502: {
@@ -9839,6 +10153,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9909,6 +10224,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -9944,6 +10260,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10030,6 +10347,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10067,6 +10385,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10118,6 +10437,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10164,6 +10484,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10220,6 +10541,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10266,6 +10588,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10309,6 +10632,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10362,6 +10686,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10410,6 +10735,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10449,6 +10775,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10495,6 +10822,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10541,6 +10869,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10578,6 +10907,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10641,6 +10971,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10703,6 +11034,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10747,6 +11079,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10812,6 +11145,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10836,6 +11170,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10866,6 +11201,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10929,6 +11265,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -10966,6 +11303,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11008,6 +11346,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11080,6 +11419,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11104,6 +11444,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11137,6 +11478,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11174,6 +11516,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
             /** @description File storage couldn’t be reached. */
             502: {
@@ -11250,6 +11593,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11306,6 +11650,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11330,6 +11675,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11391,6 +11737,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11415,6 +11762,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11439,6 +11787,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11470,6 +11819,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11499,6 +11849,42 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminListAuditLogs: {
+        parameters: {
+            query?: {
+                /** @description Search the action, the store’s name or slug, and who did it (name or email) */
+                q?: string;
+                /** @description Only this store’s entries */
+                tenantId?: string;
+                /** @description Only this action (one of `actions` in the response) */
+                action?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of entries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AuditLogList"];
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
         };
     };
@@ -11531,7 +11917,49 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            500: components["responses"]["InternalError"];
+            /** @description The run failed (the platform was emailed). */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Everything works */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Health"];
+                    };
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            /** @description Something the API needs is down (`status` is error) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Health"];
+                    };
+                };
+            };
         };
     };
 }

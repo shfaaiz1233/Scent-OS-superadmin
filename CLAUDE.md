@@ -57,7 +57,7 @@ src/
 │       │                       provisioning-panel while PROVISIONING, else tabs:
 │       │                       Overview (tenant-details-form, domains-card, owner-access-card),
 │       │                       Billing (subscription-card, due-date-card, record-payment-card, PaymentsTable),
-│       │                       Features (features-card) and Theme (theme-editor + theme-preview)
+│       │                       Features (features-card), Theme (theme-editor + theme-preview) and Activity (AuditLogTable)
 │       ├── plans/              List (search, status), new/, [id]/ (edit, delete-plan-button); plan-form, actions
 │       ├── payments/           List (status tabs, search, pagination); payments-table, payment-actions (receipt,
 │       │                       confirm, reject), actions
@@ -65,6 +65,8 @@ src/
 │       │                       billing-run-card (Run billing now), actions
 │       ├── ledger/             Tabs (?tab=earnings|sales), range (RangePicker) and search in the URL: your earnings
 │       │                       (KPIs, chart, confirmed payments, pages) and store sales (KPIs, chart, per-store table)
+│       ├── audit/              The audit log: action select, search, store filter (?tenantId=), pagination
+├── instrumentation.ts          Server errors as JSON lines (event request.failed, with the API's request id)
 ├── components/
 │   ├── ui/                     shadcn/ui, generated; don't hand-edit
 │   ├── app-sidebar.tsx         Navigation (items in lib/navigation.ts); footer: signed-in user + sign out
@@ -76,6 +78,7 @@ src/
 │   ├── pricing-fields.tsx      Plan, cycle, pricing mode and value, with the resulting price
 │   ├── features-editor.tsx     PlanFeaturesEditor (a plan's values), FeatureOverridesEditor (a store's overrides)
 │   ├── range-picker.tsx        The 7 / 30 / 90 days / 12 months links (server component; the range lives in the URL)
+│   ├── audit-log-table.tsx     Audit entries: when, what (label + action), store, who, details (short lines, all as JSON)
 │   ├── period-chart.tsx        PeriodChart: money by day or month as bars (shadcn chart / Recharts), count in the tooltip
 │   ├── theme-option.tsx        ThemeOption (a radio card) + ThemeThumbnail (a theme drawn from its tokens)
 │   ├── providers.tsx, theme-toggle.tsx
@@ -88,6 +91,7 @@ src/
     ├── pricing.ts              PricingDraft → SubscriptionInput, previewPrice (mirrors the API), labels
     ├── features.ts             featureValueLabel, featuresSummary (server-safe)
     ├── analytics.ts            RANGES, parseRange, periodLabel, formatCompactPrice (server-safe; used by the chart too)
+    ├── audit.ts                actionLabel (a label per audit action: add one for each new recordAudit action), detailLines
     ├── theme-fonts.ts          The store theme fonts (preload: false), for the theme preview
     ├── theme-font-family.ts    THEME_FONT_FAMILY: theme font → CSS font-family (client-safe)
     └── utils.ts                cn()

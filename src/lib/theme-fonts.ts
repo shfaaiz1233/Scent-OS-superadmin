@@ -1,4 +1,12 @@
-import { Cormorant_Garamond, Jost, Nunito_Sans, Playfair_Display, Poppins } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  Instrument_Serif,
+  Jost,
+  Manrope,
+  Nunito_Sans,
+  Playfair_Display,
+  Poppins,
+} from "next/font/google";
 
 // The storefront theme fonts, loaded here only for the theme editor's live preview. `preload: false`:
 // browsers download one only when the preview uses it. Mirrors the storefront's src/lib/theme/fonts.ts.
@@ -26,7 +34,25 @@ const poppins = Poppins({
   preload: false,
 });
 
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+  display: "swap",
+  preload: false,
+});
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap", preload: false });
+
 /** Class names declaring every theme font variable; put on <html>. */
-export const themeFontVariableClassNames = [jost, cormorantGaramond, playfairDisplay, nunitoSans, poppins]
+export const themeFontVariableClassNames = [
+  jost,
+  cormorantGaramond,
+  playfairDisplay,
+  nunitoSans,
+  poppins,
+  instrumentSerif,
+  manrope,
+]
   .map((font) => font.variable)
   .join(" ");

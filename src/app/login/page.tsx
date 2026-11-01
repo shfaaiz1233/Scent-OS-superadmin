@@ -5,7 +5,7 @@ import { LoginForm } from "./login-form";
 export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const { expired } = await searchParams;
+  const { expired, reset } = await searchParams;
 
   return (
     <main className="flex flex-1 items-center justify-center bg-muted/40 p-6">
@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <CardDescription>Console: sign in to manage stores and subscriptions.</CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm expired={expired === "1"} />
+          <LoginForm expired={expired === "1"} reset={reset === "1"} />
         </CardContent>
       </Card>
     </main>

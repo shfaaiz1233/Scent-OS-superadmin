@@ -7,4 +7,6 @@ export const THEME_FONT_FAMILY: Record<ThemeFont, string> = {
   "playfair-display": "var(--font-playfair-display)",
   "nunito-sans": "var(--font-nunito-sans)",
   poppins: "var(--font-poppins)",
+  "instrument-serif": "var(--font-instrument-serif)",
+  manrope: "var(--font-manrope)",
 };

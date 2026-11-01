@@ -24,6 +24,8 @@ const COLOR_GROUPS: { title: string; keys: ColorKey[] }[] = [
 ];
 
 const FONTS: { value: ThemeFont; label: string }[] = [
+  { value: "manrope", label: "Manrope (sans)" },
+  { value: "instrument-serif", label: "Instrument Serif (serif)" },
   { value: "jost", label: "Jost (sans)" },
   { value: "poppins", label: "Poppins (sans)" },
   { value: "nunito-sans", label: "Nunito Sans (sans)" },

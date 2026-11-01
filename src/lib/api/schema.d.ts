@@ -1534,6 +1534,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/superadmin/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a password reset link
+         * @description Emails the superadmin a one-time link to the console’s `/reset-password` page, valid for 60 minutes (it replaces any earlier unused link). Always answers 204, whether or not the email belongs to an account. Needs `CONSOLE_URL` and email set up; otherwise nothing is sent. Rate limited to 5 requests per 15 minutes per client.
+         */
+        post: operations["superAdminForgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/superadmin/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset the password with a link
+         * @description Sets a new password from the emailed link’s token and signs the account out everywhere; the superadmin then signs in with the new password. Each link works once. Rate limited with sign-in (10 failed attempts per 15 minutes per client).
+         */
+        post: operations["superAdminResetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/superadmin/auth/me": {
         parameters: {
             query?: never;
@@ -2338,7 +2378,7 @@ export interface components {
              * @description The preset this theme started from
              * @enum {string}
              */
-            preset: "palette" | "noir" | "rose" | "amber" | "aqua";
+            preset: "botanical" | "palette" | "noir" | "rose" | "amber" | "aqua";
             colors: components["schemas"]["ThemeColors"];
             /**
              * @description Base corner radius in rem; buttons, inputs and cards derive from it
@@ -2347,9 +2387,9 @@ export interface components {
             radius: number;
             fonts: {
                 /** @enum {string} */
-                heading: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
+                heading: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins" | "instrument-serif" | "manrope";
                 /** @enum {string} */
-                body: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
+                body: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins" | "instrument-serif" | "manrope";
             };
             /**
              * @description Transition speed, hover lift, image zoom and slider autoplay. none also turns every animation off
@@ -4387,7 +4427,7 @@ export interface components {
         };
         ThemePreset: {
             /** @enum {string} */
-            key: "palette" | "noir" | "rose" | "amber" | "aqua";
+            key: "botanical" | "palette" | "noir" | "rose" | "amber" | "aqua";
             /** @example Palette Classic */
             name: string;
             description: string;
@@ -4798,7 +4838,7 @@ export interface components {
              * @description The preset this theme started from
              * @enum {string}
              */
-            preset: "palette" | "noir" | "rose" | "amber" | "aqua";
+            preset: "botanical" | "palette" | "noir" | "rose" | "amber" | "aqua";
             colors: components["schemas"]["ThemeColorsOutput"];
             /**
              * @description Base corner radius in rem; buttons, inputs and cards derive from it
@@ -4807,9 +4847,9 @@ export interface components {
             radius: number;
             fonts: {
                 /** @enum {string} */
-                heading: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
+                heading: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins" | "instrument-serif" | "manrope";
                 /** @enum {string} */
-                body: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins";
+                body: "jost" | "cormorant-garamond" | "playfair-display" | "nunito-sans" | "poppins" | "instrument-serif" | "manrope";
             };
             /**
              * @description Transition speed, hover lift, image zoom and slider autoplay. none also turns every animation off
@@ -10203,6 +10243,78 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    superAdminForgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: email
+                     * @example owner@acme.com
+                     */
+                    email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Request accepted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    superAdminResetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description The token from the reset link in the email */
+                    token: string;
+                    /**
+                     * @description At least 10 characters
+                     * @example correct-horse-battery
+                     */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Password changed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The token is invalid, used or expired, or the password breaks the policy. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     superAdminGetMe: {
         parameters: {
             query?: never;
@@ -10293,10 +10405,10 @@ export interface operations {
                     /** @description The first one becomes the primary domain (used in links); change it later. */
                     domains: string[];
                     /**
-                     * @default palette
+                     * @default botanical
                      * @enum {string}
                      */
-                    themePreset?: "palette" | "noir" | "rose" | "amber" | "aqua";
+                    themePreset?: "botanical" | "palette" | "noir" | "rose" | "amber" | "aqua";
                     /** @description Its plan and pricing. Left out: the store isn’t billed (set it up later). Its first payment starts the first period. */
                     subscription?: {
                         /**
